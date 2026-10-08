@@ -3,6 +3,16 @@
 // Este arquivo contém o sidebar fixo que será incluído em todas as páginas
 // Certifique-se de que o arquivo config/url.php já foi incluído
 require_once __DIR__ . '/../config/session.php';
+
+// Rota actual (sem o prefixo APP_BASE nem query string), usada para
+// assinalar o item ativo no menu. Ex.: /monana-eclesia/members -> "members"
+$__uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+$__base = trim(preg_replace('#^https?://[^/]+#', '', defined('APP_BASE') ? APP_BASE : ''), '/');
+if ($__base !== '' && strpos(trim($__uri, '/'), $__base . '/') === 0) {
+    $__uri = substr(trim($__uri, '/'), strlen($__base) + 1);
+}
+$GLOBALS['__rota_atual'] = trim($__uri, '/');
+function rotaAtual() { return $GLOBALS['__rota_atual'] ?? ''; }
 ?>
 <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
@@ -14,21 +24,21 @@ require_once __DIR__ . '/../config/session.php';
         <div class="sb-label">Gestão</div>
         <!-- Dashboard -->
         <?php if (podeAcessarModulo('dashboard')): ?>
-        <a href="<?= url('modules/dashboard/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/dashboard/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'dashboard') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-home"></i></span> Dashboard
         </a>
         <?php endif; ?>
 
         <!-- Membros -->
         <?php if (podeAcessarModulo('members')): ?>
-        <a href="<?= url('modules/members/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'members') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/members/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'members') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-users"></i></span> Membros
         </a>
         <?php endif; ?>
 
         <!-- Registo Diário -->
         <?php if (podeAcessarModulo('registry')): ?>
-        <a href="<?= url('modules/registry/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'registry') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/registry/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'registry') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-calendar-day"></i></span> Registo Diário
         </a>
         <?php endif; ?>
@@ -38,11 +48,11 @@ require_once __DIR__ . '/../config/session.php';
         ========================================== -->
         <?php if (podeAcessarModulo('lists')): ?>
         <?php 
-        $is_lists = strpos($_SERVER['REQUEST_URI'], 'lists') !== false;
-        $is_lista_todos = strpos($_SERVER['REQUEST_URI'], 'lists/index.php') !== false;
-        $is_lista_mamas = strpos($_SERVER['REQUEST_URI'], 'lists/mamas.php') !== false;
-        $is_lista_papas = strpos($_SERVER['REQUEST_URI'], 'lists/papas.php') !== false;
-        $is_lista_jovens = strpos($_SERVER['REQUEST_URI'], 'lists/jovens.php') !== false;
+        $is_lists = strpos(rotaAtual(), 'lists') === 0;
+        $is_lista_todos = (rotaAtual() === 'lists' || rotaAtual() === 'lists/index');
+        $is_lista_mamas = strpos(rotaAtual(), 'lists/mamas') === 0;
+        $is_lista_papas = strpos(rotaAtual(), 'lists/papas') === 0;
+        $is_lista_jovens = strpos(rotaAtual(), 'lists/jovens') === 0;
         ?>
         <div class="sb-group <?= $is_lists ? 'open' : '' ?>">
             <div class="sb-item <?= $is_lists ? 'active' : '' ?>" style="display:flex;align-items:center;justify-content:space-between;">
@@ -72,7 +82,7 @@ require_once __DIR__ . '/../config/session.php';
 
         <!-- Contribuição Fim do Ano -->
         <?php if (podeAcessarModulo('year_end')): ?>
-        <a href="<?= url('modules/year-end/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'year-end') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/year-end/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'year-end') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-gift"></i></span> Contribuição Fim do Ano
         </a>
         <?php endif; ?>
@@ -82,10 +92,10 @@ require_once __DIR__ . '/../config/session.php';
         ========================================== -->
         <?php if (podeAcessarModulo('reports')): ?>
         <?php 
-        $is_reports = strpos($_SERVER['REQUEST_URI'], 'reports') !== false;
-        $is_financeiro = strpos($_SERVER['REQUEST_URI'], 'reports/index.php') !== false;
-        $is_anual = strpos($_SERVER['REQUEST_URI'], 'reports/annual.php') !== false;
-        $is_rel_saidas = strpos($_SERVER['REQUEST_URI'], 'reports/expenses.php') !== false;
+        $is_reports = strpos(rotaAtual(), 'reports') === 0;
+        $is_financeiro = (rotaAtual() === 'reports' || rotaAtual() === 'reports/index');
+        $is_anual = strpos(rotaAtual(), 'reports/annual') === 0;
+        $is_rel_saidas = strpos(rotaAtual(), 'reports/expenses') === 0;
         ?>
         <div class="sb-group <?= $is_reports ? 'open' : '' ?>" onclick="this.classList.toggle('open')">
             <div class="sb-item <?= $is_reports ? 'active' : '' ?>">
@@ -111,7 +121,7 @@ require_once __DIR__ . '/../config/session.php';
         <?php if (podeAcessarModulo('expenses')): ?>
         <?php 
         // Verifica se está no módulo de saídas (NÃO no relatório de saídas)
-        $is_expenses = strpos($_SERVER['REQUEST_URI'], 'modules/expenses/') !== false;
+        $is_expenses = strpos(rotaAtual(), 'expenses') === 0;
         ?>
         <a href="<?= url('modules/expenses/index.php') ?>" class="sb-item <?= $is_expenses ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-money-bill-wave"></i></span> Saídas/Despesas
@@ -119,24 +129,24 @@ require_once __DIR__ . '/../config/session.php';
         <?php endif; ?>
         <div class="sb-label">Conta</div>
         <!-- Meu Perfil -->
-        <a href="<?= url('modules/profile/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'profile') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/profile/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'profile') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-user-cog"></i></span> Meu Perfil
         </a>
 
         <?php if ($_SESSION['user_perfil'] == 'admin'): ?>
         <div class="sb-label">Administração</div>
         <!-- Utilizadores (APENAS ADMIN) -->
-        <a href="<?= url('modules/users/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'users') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/users/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'users') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-user-cog"></i></span> Utilizadores
         </a>
 
         <!-- Auditoria (APENAS ADMIN) -->
-        <a href="<?= url('modules/audit/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'audit') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/audit/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'audit') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-shield-alt"></i></span> Auditoria
         </a>
 
         <!-- Backups (APENAS ADMIN) -->
-        <a href="<?= url('modules/backups/index.php') ?>" class="sb-item <?= strpos($_SERVER['REQUEST_URI'], 'backups') !== false ? 'active' : '' ?>">
+        <a href="<?= url('modules/backups/index.php') ?>" class="sb-item <?= strpos(rotaAtual(), 'backups') === 0 ? 'active' : '' ?>">
             <span class="ic"><i class="fas fa-database"></i></span> Backups
         </a>
         <?php endif; ?>

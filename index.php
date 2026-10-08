@@ -1,5 +1,5 @@
 <?php
-// index.php - Raiz do projeto
-// Redireciona para o login usando o mesmo caminho base fixo do resto do sistema
-require_once __DIR__ . '/config/url.php';
-redirect('login');
+// index.php - Raiz do projeto (legado)
+// O front controller real é public/index.php; este ficheiro apenas
+// encaminha para ele, preservando o REQUEST_URI original.
+require __DIR__ . '/public/index.php';
