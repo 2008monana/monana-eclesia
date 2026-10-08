@@ -1,0 +1,45 @@
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de log
+logs/*.log
+logs/*.txt
+*.log
+
+# Dependências
+vendor/
+node_modules/
+composer.lock
+
+# Arquivos de configuração local
+config/database.php
+.env
+.env.local
+.env.production
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Arquivos temporários do PHP
+*.tmp
+*.cache
+
+# Uploads (se tiver)
+public/uploads/
+public/assets/img/uploads/
+
+# Backup do banco de dados
+*.sql
+*.backup
+
+# Arquivos de sessão
+sess_*
+
+# Certificados
+*.pem
+*.crt
+*.key"vendor/" 

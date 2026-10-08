@@ -1,0 +1,77 @@
+# .htaccess - Versão InfinityFree
+RewriteEngine On
+
+# ============================================
+# PÁGINA DE ERRO 404 PERSONALIZADA
+# ============================================
+# NOTA: a InfinityFree substitui automaticamente qualquer pasta chamada
+# "errors" pela página de erro genérica deles. Por isso a pasta chama-se
+# "paginas-erro" e não "errors".
+ErrorDocument 404 /paginas-erro/404.php
+
+# ============================================
+# ESCONDER A EXTENSÃO .PHP
+# ============================================
+# 1) Se alguém aceder diretamente a "algo.php" (digitando na barra de
+#    endereços, um link antigo, favorito, etc.), redireciona para "algo"
+#    sem a extensão. Só em GET/HEAD para nunca quebrar formulários POST
+#    ou pedidos AJAX (fetch/XHR).
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 2) Internamente, quando o pedido não tem extensão, serve o ficheiro
+#    .php correspondente sem mudar o URL mostrado no navegador.
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# ============================================
+# REGRAS PARA URLS AMIGÁVEIS
+# ============================================
+# Redirecionar /login para modules/auth/login.php
+RewriteRule ^login$ modules/auth/login.php [L]
+# Redirecionar /dashboard para modules/dashboard/index.php
+RewriteRule ^dashboard$ modules/dashboard/index.php [L]
+# Redirecionar /recuperar-senha para modules/auth/forgot-password.php
+RewriteRule ^recuperar-senha$ modules/auth/forgot-password.php [L]
+# Redirecionar /resetar-senha para modules/auth/reset-password.php
+RewriteRule ^resetar-senha$ modules/auth/reset-password.php [L]
+# Redirecionar /logout para modules/auth/logout.php
+RewriteRule ^logout$ modules/auth/logout.php [L]
+
+# ============================================
+# REGRAS PARA ROTAS DE MÓDULOS
+# ============================================
+# Redirecionar /membros para modules/members/index.php
+RewriteRule ^membros$ modules/members/index.php [L]
+# Redirecionar /membros/novo para modules/members/add.php
+RewriteRule ^membros/novo$ modules/members/add.php [L]
+# Redirecionar /membros/editar/([0-9]+) para modules/members/edit.php?id=$1
+RewriteRule ^membros/editar/([0-9]+)$ modules/members/edit.php?id=$1 [L]
+# Redirecionar /membros/visualizar/([0-9]+) para modules/members/view.php?id=$1
+RewriteRule ^membros/visualizar/([0-9]+)$ modules/members/view.php?id=$1 [L]
+
+# ============================================
+# REDIRECIONAR INDEX.PHP PARA LOGIN
+# ============================================
+RewriteRule ^$ modules/auth/login.php [L]
+
+# ============================================
+# SEGURANÇA - InfinityFree
+# ============================================
+# Impedir listagem de diretórios
+Options -Indexes
+
+# Proteger arquivos sensíveis
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sql|json|yml|yaml)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Proteger pastas config e includes
+<IfModule mod_rewrite.c>
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^vendor/ - [F,L]
+</IfModule>
