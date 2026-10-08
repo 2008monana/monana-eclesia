@@ -59,8 +59,10 @@ ALTQUOTE_RE = re.compile(r'<<<\s*[\'"]?(\w+)[\'"]?\s*$')
 
 def find_prologue_end(lines):
     """indice da linha com o `?>` que fecha o prologo logico (seguido de HTML).
-    Ignora `?>` e marcadores dentro de strings/heredocs PHP."""
-    state = {'sq': False, 'dq': False, 'block': None}
+    So ignora heredocs/nowdocs PHP; os `?>` dentro de strings nao causam
+    falsos positivos porque so sao aceites quando a linha seguinte comeca
+    por uma tag HTML."""
+    state = {'block': None}
     for i, ln in enumerate(lines):
         s = ln.strip()
         if state['block'] is not None:
@@ -68,39 +70,25 @@ def find_prologue_end(lines):
                 state['block'] = None
             continue
         m = ALTQUOTE_RE.search(ln)
-        if m and (state['sq'] or state['dq']):
-            # closing quote of a nowdoc/heredoc opened inside string? unlikely; skip
-            pass
-        if m and not state['sq'] and not state['dq']:
+        if m:
             state['block'] = m.group(1)
             continue
-        if s == '?>' and not state['sq'] and not state['dq']:
+        if s == '?>' or s.endswith('?>'):
             nxt = ''
             for j in range(i + 1, min(i + 6, len(lines))):
                 nxt += lines[j]
                 if lines[j].strip():
                     break
             t = nxt.lstrip()
+            # o prologo termina no primeiro `?>` seguido de HTML real.
+            # `?>` em fim de ficheiro ou seguido de mais PHP e apenas
+            # o fecho de um script puro (AJAX/PDF/CSV) - nao conta.
             if t.startswith('<!DOCTYPE') or t.startswith('<html') or t.startswith('<main') \
                or t.startswith('<div') or t.startswith('<aside') or t.startswith('<?php') \
                or t.startswith('<table') or t.startswith('<section') or t.startswith('<body') \
                or t.startswith('<link') or t.startswith('<meta') or t.startswith('<style') \
                or t.startswith('<header') or t.startswith('<nav') or t.startswith('<!--'):
                 return i
-        # actualizar estado de aspas simples multi-linha
-        if state['sq']:
-            if r"';" in s or s.endswith("'") or s.endswith("';"):
-                state['sq'] = False
-        elif state['dq']:
-            if s.endswith('";') or s.endswith('";') or s.endswith('"'):
-                state['dq'] = False
-        else:
-            mm = re.match(r"^\s*\$[\w\[\]'\"]+\s*\.?=\s*(?:\. ?)?'(?!.*').*$", ln)
-            if mm:
-                state['sq'] = True
-            md = re.match(r'^\s*\$[\w\[\]"\.]+\s*\.?=\s*(?:\. ?)?"(?!.*").*$', ln)
-            if md:
-                state['dq'] = True
     return None
 
 moved, problems = [], []
