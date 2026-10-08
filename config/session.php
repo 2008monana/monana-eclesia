@@ -10,8 +10,7 @@ function isLoggedIn() {
 
 function checkLogin() {
     if (!isLoggedIn()) {
-        header('Location: /ipfva-gestao/modules/auth/login.php');
-        exit;
+        redirect('login');
     }
 }
 
@@ -72,8 +71,7 @@ function podeAcessarModulo($modulo) {
 function requireModuleAccess($modulo) {
     checkLogin();
     if (!podeAcessarModulo($modulo)) {
-        header('Location: /ipfva-gestao/modules/profile/index.php?sem_acesso=1');
-        exit;
+        redirect('modules/profile/index.php?sem_acesso=1');
     }
 }
 
@@ -87,7 +85,7 @@ function getUrlPosLogin() {
     if (podeAcessarModulo('dashboard')) {
         return 'dashboard';
     }
-    return 'modules/profile/index.php';
+    return 'profile';
 }
 
 function hasPermission($modulo, $acao) {

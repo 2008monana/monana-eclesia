@@ -3,7 +3,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /ipfva-gestao/modules/auth/login.php');
+    redirect('login');
     exit;
 }
 
@@ -27,7 +27,7 @@ $stmt->execute([':id' => $user_id]);
 $usuario = $stmt->fetch();
 
 if (!$usuario) {
-    header('Location: /ipfva-gestao/modules/dashboard/index.php');
+    redirect('dashboard');
     exit;
 }
 
