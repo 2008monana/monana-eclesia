@@ -1,1 +1,22 @@
-(empty)
+# Segredos e configuração local
+/.env
+/.env.*
+!/.env.example
+
+# Dependências instaladas no ambiente; em produção, enviar vendor/ por FTP.
+/.venv/
+/vendor/
+
+# Dados e ficheiros gerados; manter apenas os marcadores das pastas.
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/emails/*
+!/storage/emails/.gitkeep
+
+# Ficheiros temporários de editores e sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

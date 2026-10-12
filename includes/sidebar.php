@@ -4,14 +4,19 @@
 // Certifique-se de que o arquivo config/url.php já foi incluído
 require_once __DIR__ . '/../config/session.php';
 
-// Rota actual (sem o prefixo APP_BASE nem query string), usada para
-// assinalar o item ativo no menu. Ex.: /monana-eclesia/members -> "members"
-$__uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
-$__base = trim(preg_replace('#^https?://[^/]+#', '', defined('APP_BASE') ? APP_BASE : ''), '/');
-if ($__base !== '' && strpos(trim($__uri, '/'), $__base . '/') === 0) {
-    $__uri = substr(trim($__uri, '/'), strlen($__base) + 1);
+// A ponte MVC fornece a rota procedural equivalente para manter o destaque
+// do menu até este sidebar ser migrado para o layout App/Views na Fase 4.
+if (isset($GLOBALS['__rota_atual_legada'])) {
+    $GLOBALS['__rota_atual'] = (string) $GLOBALS['__rota_atual_legada'];
+} else {
+    // Compatibilidade para páginas antigas abertas directamente durante o desenvolvimento.
+    $__uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $__base = trim(preg_replace('#^https?://[^/]+#', '', defined('APP_BASE') ? APP_BASE : ''), '/');
+    if ($__base !== '' && strpos(trim($__uri, '/'), $__base . '/') === 0) {
+        $__uri = substr(trim($__uri, '/'), strlen($__base) + 1);
+    }
+    $GLOBALS['__rota_atual'] = trim($__uri, '/');
 }
-$GLOBALS['__rota_atual'] = trim($__uri, '/');
 function rotaAtual() { return $GLOBALS['__rota_atual'] ?? ''; }
 ?>
 <aside class="sidebar" id="sidebar">
