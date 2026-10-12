@@ -1,9 +1,14 @@
 <?php
-// config/session.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+if (!defined('MONANA')) {
+    http_response_code(403);
+    exit;
 }
 
+// A sessão é preparada pelo bootstrap com HttpOnly, Secure e SameSite=Lax.
+// Páginas legadas que ainda chamam session_start() reutilizam esta configuração.
+\App\Core\Session::start();
+
+if (!function_exists('isLoggedIn')) {
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
@@ -93,4 +98,4 @@ function hasPermission($modulo, $acao) {
     // utilizador tenha acesso é permitida; sem acesso ao módulo, nada é.
     return podeAcessarModulo($modulo);
 }
-?>
+}

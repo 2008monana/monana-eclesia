@@ -1,0 +1,6 @@
+# O directório public/ contém apenas o front controller interno.
+# A entrada pública suportada é /index.php na raiz de htdocs.
+Options -Indexes
+RewriteEngine On
+RewriteCond %{THE_REQUEST} \s/+([^?\s]+/)?public(?:/|[?\s]) [NC]
+RewriteRule ^ - [F,L]

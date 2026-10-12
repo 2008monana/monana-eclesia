@@ -1,58 +1,53 @@
-# .htaccess - Routing centralizado (arquitectura MVC)
-# Projecto instalado na subpasta "monana-eclesia"
-# (ex.: http://localhost/monana-eclesia/members)
+# MonanaEclésia — InfinityFree/cPanel (projecto instalado dentro de htdocs)
+Options -Indexes
+DirectoryIndex index.php
 RewriteEngine On
 
-# ============================================
-# PÁGINA DE ERRO 404 PERSONALIZADA
-# ============================================
-# NOTA: a InfinityFree substitui automaticamente qualquer pasta chamada
-# "errors" pela página de erro genérica deles. Por isso a pasta chama-se
-# "paginas-erro" e não "errors".
-ErrorDocument 404 /monana-eclesia/paginas-erro/404.php
-
-# ============================================
-# REDIRECIONAR /modules/<m>/<acao>.php -> /<m>/<acao>
-# ============================================
-# Mantém os bookmarks antigos a funcionar: qualquer URL legado com o
-# prefixo /modules/ é redirecionado (301) para a rota amigável nova.
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^modules/(auth/(?:login|logout|forgot-password|reset-password))\.php$ modules/$1 [R=301,L]
-RewriteRule ^modules/([a-z\-]+)/index\.php$ $1 [R=301,L]
-RewriteRule ^modules/([a-z\-]+)/([a-z\-]+)\.php$ $1/$2 [R=301,L]
-RewriteRule ^modules/([a-z\-]+)/$ $1 [R=301,L]
-
-# ============================================
-# ESCONDER A EXTENSÃO .PHP (URLs diretos antigos)
-# ============================================
+# URLs legadas de leitura: 301 para os nomes amigáveis.
 RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
-RewriteCond %{THE_REQUEST} \s/+((?!modules/).+?)\.php[\s?] [NC]
-RewriteRule ^ /%1 [R=301,L]
+RewriteRule ^modules/auth/login(?:\.php)?$ login [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/auth/logout(?:\.php)?$ sair [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/auth/forgot-password(?:\.php)?$ recuperar-senha [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/auth/reset-password(?:\.php)?$ resetar-senha [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/([a-z-]+)/index\.php$ $1 [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/([a-z-]+)/([a-z-]+)\.php$ $1/$2 [R=301,L,NC]
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteRule ^modules/([a-z-]+)/?$ $1 [R=301,L,NC]
 
-# ============================================
-# FRONTP CONTROLLER
-# ============================================
-# Tudo o que não for um ficheiro ou pasta real vai para public/index.php
-# (que carrega config/bootstrap.php + core/Router.php).
-# O Router remove o prefixo da subpasta automaticamente.
+# POSTs antigos são encaminhados internamente ao front controller (sem 301,
+# que poderia converter o pedido em GET); Request normaliza o caminho legado.
+RewriteCond %{REQUEST_METHOD} !^(GET|HEAD)$
+RewriteRule ^modules/[a-z-]+(?:/[a-z0-9-]+)?(?:\.php)?/?$ index.php [QSA,L,NC]
+
+# Nenhuma pasta de aplicação ou dado interno pode ser pedido directamente.
+RewriteRule ^(\.git|\.venv|app|config|database|routes|storage|vendor|docs|controllers|models|views|modules|includes|core|_build|_legado)(/|$) - [F,L,NC]
+
+# Ocultar .php nas restantes páginas antigas; manter acessível só o front
+# controller público e a pequena entrada index.php da raiz.
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteCond %{THE_REQUEST} \s/+((?!modules/)(?!public/index\.php)(?!index\.php)[^?\s]+?)\.php[\s?] [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# Tudo o que não for ficheiro/pasta público real passa pela entrada da raiz,
+# que encaminha para o único front controller em public/index.php.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [L]
+RewriteRule ^ index.php [QSA,L]
 
-# ============================================
-# SEGURANÇA
-# ============================================
-# Impedir listagem de diretórios
-Options -Indexes
-
-# Proteger arquivos sensíveis
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sql|json|yml|yaml)$">
+# Ficheiros ocultos, segredos, logs, SQL e metadados de dependências.
+<FilesMatch "^(\.env.*|.*\.(htaccess|htpasswd|ini|log|sql|json|yml|yaml|lock))$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# Proteger pastas internas (config, includes, core, controllers, models, views, modules)
-<IfModule mod_rewrite.c>
-    RewriteRule ^(config|includes|core|controllers|models|views|_build)/ - [F,L]
-    RewriteRule ^vendor/ - [F,L]
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
