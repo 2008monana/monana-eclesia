@@ -41,8 +41,8 @@ O repositório contém **duas versões em paralelo**:
 | # | Achado | Impacto | Tratamento |
 |---|---|---|---|
 | A1 | `config/database.php` real **não existe no repositório** — está no `.gitignore` do projecto original e foi substituído por um stub `sqlite::memory:` | Não é possível correr nem testar localmente | `.env.example` + `config/database.php` a ler do `.env`; credenciais fornecidas por ti |
-| A2 | A constante `ANO_INICIO_COTAS` é **usada 8 vezes e nunca definida** | Em PHP 8 lança `Error`; em 7.4 entra como string e corrompe a regra anual das cotas | Passa a `configuracoes_igreja.ano_inicio_cotas` (valor a confirmar: 2026, pelos comentários do código) |
-| A3 | A cota mensal está **fixa em 1000 Kz dentro do código** (`getCotaMensal()`), em 5 sítios | Bloqueia multi‑igreja (cada igreja tem o seu valor) | Passa a `configuracoes_igreja.valor_cota` |
+| A2 | A constante `ANO_INICIO_COTAS` é **usada 8 vezes e nunca definida** | Em PHP 8 lança `Error`; em 7.4 entra como string e corrompe a regra anual das cotas | Substituir por `configuracoes_igreja.inicio_cotas`, definido manualmente pelo pastor/admin (não inferido da data de criação da igreja; ver D‑06) |
+| A3 | A cota mensal está **fixa em 1000 Kz dentro do código** (`getCotaMensal()`), em 5 sítios | Bloqueia multi‑igreja (cada igreja tem o seu valor) | Passa a `valor_cota` + `periodicidade_cota` (`mensal` ou `anual`), configuráveis pelo admin da igreja |
 | A4 | A tabela `cotas_diarias` é **MyISAM** (documentado no próprio código) | MyISAM não suporta transacções **nem chaves estrangeiras** → impede o isolamento por `igreja_id` com FK | Migração `002` converte para **InnoDB** antes de adicionar FKs |
 | A5 | O token de recuperação de senha é gravado **em texto simples** (`usuarios.token_recuperacao`) | Quem ler a BD assume contas | Tabela `tokens_senha` só com hash (SHA‑256), uso único, 60 min |
 | A6 | A senha de recuperação é **escrita à mão pelo admin** noutro utilizador (`users/reset-password.php`) | Não há senha temporária nem obrigação de troca | Fluxo novo: senha temporária ou link de activação + `deve_trocar_senha` |
@@ -278,11 +278,11 @@ Estas regras são o que os testes de regressão da Fase 7 vão validar.
 
 | ID | Regra | Implementação actual | Onde |
 |---|---|---|---|
-| **RN01** | **Mês de referência = mês mais antigo em dívida.** Um pagamento novo é atribuído ao mês mais antigo (desde Janeiro do ano corrente) cujo total ainda seja `< valor_cota`. Se todos estiverem quitados, usa o mês corrente | `distribuirPagamentoPorMeses()`, `calcularProximoMesReferencia()` | `lists/functions.php` |
-| **RN02** | **O pagamento não é dividido.** Se 2000 Kz entrarem e a cota for 1000, grava‑se **um único registo** no mês mais antigo (com os 2000 Kz); os meses seguintes aparecem quitados *por adiantamento* | `distribuirPagamentoPorMeses()` devolve sempre 1 elemento | `lists/functions.php` |
-| **RN03** | **Quitação por saldo acumulado.** `total_pago` (soma dos `mes_referencia` entre Jan/ano e o mês) ÷ cota = nº de meses quitados; `quitado ⇔ meses_quitados >= mês` | `calcularSaldoMembro()`, `verificarStatusMes()` | `lists/functions.php` |
-| **RN04** | **Reinício anual.** Dívidas de anos anteriores são ignoradas: a contagem começa sempre em Janeiro do ano corrente | `$meses_deveria = (int) $mes`, `$ano_inicio = max($ano_atual, ANO_INICIO_COTAS)` | `lists/functions.php` |
-| **RN05** | **Valor da cota por igreja.** Hoje fixo em **1000 Kz**; passa a `configuracoes_igreja.valor_cota` | `getCotaMensal()` + 5 usos | A3 |
+| **RN01** | **Mês de referência = mês mais antigo em dívida.** No modo mensal, um pagamento novo é atribuído ao mês mais antigo, a partir do início manual definido para as cotas (e, nos anos seguintes, desde Janeiro), cujo total ainda seja `< valor_cota`. Se todos estiverem quitados, usa o período corrente | `distribuirPagamentoPorMeses()`, `calcularProximoMesReferencia()` | `lists/functions.php` |
+| **RN02** | **O pagamento não é dividido.** Se 2000 Kz entrarem e a cota mensal for 1000, grava‑se **um único registo** no mês mais antigo (com os 2000 Kz); os meses seguintes aparecem quitados *por adiantamento*. No modo anual, a mesma regra aplica‑se ao período anual configurado | `distribuirPagamentoPorMeses()` devolve sempre 1 elemento | `lists/functions.php` |
+| **RN03** | **Quitação por saldo acumulado.** No modo mensal, `total_pago` (soma desde o início aplicável do ano até ao mês) ÷ cota = nº de meses quitados; `quitado ⇔ meses_quitados >= mês`. O modo anual usa o valor e a unidade anual configurados | `calcularSaldoMembro()`, `verificarStatusMes()` | `lists/functions.php` |
+| **RN04** | **Reinício anual no modo mensal.** Dívidas de anos anteriores são ignoradas: a contagem começa em Janeiro do ano corrente, excepto no primeiro ano, em que começa no mês de início escolhido pelo pastor/admin | `$meses_deveria = (int) $mes`, `$ano_inicio = max($ano_atual, ANO_INICIO_COTAS)` | `lists/functions.php` |
+| **RN05** | **Valor e periodicidade da cota por igreja.** O admin define o valor em Kz e se a cota é mensal ou anual; `valor_cota` representa o montante de cada período | `getCotaMensal()` + 5 usos | A3 |
 | **RN06** | **Domingos.** As listas mostram os domingos do mês como colunas de pagamento; um pagamento conta na coluna da **data real** de pagamento (não do `mes_referencia`) | `getDomingosDoMes()`, `getPagamentosMembro()` | `lists/functions.php` |
 | **RN07** | **Exclusão de cota só no dia corrente.** Registos de dias passados não podem ser apagados | `registry/delete.php` | — |
 | **RN08** | **Membro com histórico não é apagado, é desactivado.** Sem cotas → `DELETE`; com cotas → `ativo = 0` | `members/delete.php` | — |
@@ -292,12 +292,13 @@ Estas regras são o que os testes de regressão da Fase 7 vão validar.
 | **RN12** | **Fundo de fim de ano.** Contribuições por `ano`; saídas com `origem_fundo='contribuicoes'` e `YEAR(data_saida)=ano` consomem esse fundo | `year-end/generate-pdf.php` | — |
 | **RN13** | **Troca da própria senha exige a senha actual** e confirmação; email de utilizador é único | `profile/index.php` | — |
 | **RN14** | **Formatação AO:** moeda `1.250,00 Kz`, datas `dd/mm/aaaa`, interface em pt‑AO | `number_format($v, 2, ',', '.')`, `date('d/m/Y')` | todo o sistema |
+| **RN15** | **Início manual dos módulos financeiros.** Criar uma igreja não inicia automaticamente cotas nem contribuições; o pastor/admin escolhe o período de início. Se escolher Junho, não se contabilizam períodos anteriores a Junho | Nova configuração no módulo da igreja | requisito confirmado pelo utilizador |
 
 ### ⚠️ Contradição detectada (A11 / decisão D‑02)
 
 `registry/recalcular-referencias.php` é uma **ferramenta de correcção de dados antigos** que reaplica a regra RN01/RN02 aos registos já existentes. Os seus comentários dizem que *"divide um pagamento entre dois meses quando necessário"* e o código (`calcularRedistribuicao` → `orig_ids` com mais de 1 elemento) confirma que **fragmenta** um pagamento em vários registos — o oposto de RN02.
 
-**Recomendação:** alinhar a ferramenta com RN02 (um registo por pagamento real, no mês mais antigo em dívida). É a regra que o prompt fixa e a que o registo diário já aplica. **Confirma esta decisão, por favor.**
+**Decisão a aplicar:** alinhar a ferramenta com RN02 (um registo por pagamento real, no período mais antigo em dívida). A regra foi definida no requisito original: o pagamento real permanece inteiro; a ferramenta de recálculo não deve fragmentá‑lo. Qualquer correcção de histórico será validada antes de ser aplicada aos dados existentes.
 
 ---
 
@@ -431,7 +432,7 @@ erDiagram
 |---|---|
 | **`igrejas`** | `id`, `plano_id` FK, `nome`, `slug` UK, `email_admin`, `telefone`, `cidade`, `estado` ENUM(`pendente`,`activa`,`suspensa`), `criada_em`, `suspensa_em`, `motivo_suspensao` |
 | **`planos`** | `id`, `nome`, `limite_membros`, `limite_utilizadores`, `preco_kz`, `ativo`, `criado_em` |
-| **`configuracoes_igreja`** | `igreja_id` PK/FK, `nome_exibicao`, `subtitulo`, `rodape`, `versiculo`, `logo_path`, `valor_cota`, `ano_inicio_cotas`, `moeda` (`AOA`), `dias_expiracao_sessao` |
+| **`configuracoes_igreja`** | `igreja_id` PK/FK, `nome_exibicao`, `subtitulo`, `rodape`, `versiculo`, `logo_path`, `valor_cota`, `periodicidade_cota` ENUM(`mensal`,`anual`), `inicio_cotas` DATE NULL, `inicio_contribuicoes` DATE NULL, `moeda` (`AOA`), `dias_expiracao_sessao` |
 | **`permissoes_modulo`** | `id`, `usuario_id` FK, `igreja_id` FK, `modulo`, `permitido` TINYINT — UK(`usuario_id`,`modulo`) |
 | **`tokens_senha`** | `id`, `usuario_id` FK, `token_hash` CHAR(64) UK, `expira_em`, `usado_em`, `criado_em`, `ip` |
 | **`tokens_ativacao`** | `id`, `usuario_id` FK, `token_hash` UK, `expira_em`, `usado_em`, `criado_em` |
@@ -448,6 +449,8 @@ erDiagram
 - Unicidade por inquilino: `membros` (`igreja_id`,`nome_completo`,`telefone`) apenas como índice de pesquisa (não bloqueia homónimos).
 - **Toda** leitura/escrita de dados de igreja passa `igreja_id`; acessos por `id` validam `igreja_id` **na mesma consulta** (anti‑IDOR).
 - `igreja_id` vem sempre da sessão (`TenantMiddleware`), nunca de formulário, URL ou cookie.
+- A criação da igreja não inicia automaticamente as cotas nem as contribuições: o pastor/admin define o período de início em cada módulo; antes dessa configuração não há períodos devidos.
+- Se o início for definido para Junho, o cálculo começa em Junho — não se criam dívidas retroactivas dos meses anteriores.
 - Superadmin: `igreja_id IS NULL` e acesso restrito a `/superadmin` por `PapelMiddleware`.
 
 ---
@@ -471,6 +474,8 @@ _legado/       código procedural antigo, arquivado e desligado (ver D‑03)
 **Decisão D‑03:** o código antigo é mantido em `_legado/` (arquivado, inacessível por HTTP) **apenas** até a Fase 6 validar a migração de dados; depois é removido do repositório. Nada fica a correr em paralelo.
 **Decisão D‑04:** rotas novas em português + 301 das rotas actuais. Nenhuma página antiga fica acessível depois de migrada.
 **Decisão D‑05:** `membros.categoria`, `saidas.origem_fundo` e `usuarios.perfil` mantêm os valores actuais; `perfil` é migrado para `papel` (`admin`→`admin_igreja`, `gestor`→`tesoureiro` por defeito, ajustável na Fase 6).
+
+**Hospedagem confirmada:** InfinityFree no plano gratuito. A instalação fica dentro de `htdocs`; o `index.php` da raiz apenas encaminha para o único front controller `public/index.php`. O `.htaccess` e uma guarda PHP bloqueiam acesso directo às pastas internas e a `.env`, SQL e logs. Não se dependerá de ficheiros fora de `htdocs`.
 
 ---
 
@@ -512,11 +517,12 @@ Os testes de RN01–RN04 (`CotaService`) serão escritos com um duplo de reposit
 
 ---
 
-## 13. Decisões a confirmar
+## 13. Decisões registadas e pontos pendentes
 
-| ID | Questão | Recomendação |
+| ID | Decisão ou ponto | Estado e regra |
 |---|---|---|
-| **D‑02** | A ferramenta `recalcular-referencias` deve continuar a **dividir** pagamentos entre meses, ou alinhar com RN02 (**registo inteiro** no mês mais antigo)? | Alinhar com RN02 |
-| **D‑06** | `ANO_INICIO_COTAS`: confirmar o valor (o código sugere **2026**) e se todas as igrejas novas começam no ano de criação, ou no mesmo 2026 | 2026 para a igreja 1; ano de criação para igrejas novas (configurável) |
+| **D‑02** | A ferramenta `recalcular-referencias` deve dividir pagamentos ou alinhar com RN02 (**registo inteiro** no período mais antigo)? | **Decidido:** alinhar com RN02; não fragmentar um pagamento real. |
+| **D‑06** | Como definir o valor e o arranque das cotas/contribuições? | **Decidido:** o admin define o valor e periodicidade da cota (`mensal`/`anual`); pastor/admin escolhe manualmente o período de início de cada módulo. Não se infere o arranque de `igrejas.criada_em`; se o pastor seleccionar Junho, o cálculo começa em Junho. Na igreja 1, manter inicialmente 1000 Kz/mês e mapear o início histórico na Fase 6. Antes de migrar o módulo de cotas na Fase 5, fixar a regra de fronteira do modo anual (ano civil ou período de 12 meses). |
+| **D‑07** | Qual o alvo de alojamento? | **Decidido:** InfinityFree gratuito; ficheiros dentro de `htdocs`, pastas internas protegidas e front controller único em `public/index.php`, chamado pela entrada da raiz. |
 
-*(D‑01, D‑03, D‑04, D‑05 já estão decididas acima e seguem a opção mais simples.)*
+*(D‑01, D‑03, D‑04 e D‑05 já estão decididas acima e seguem a opção mais simples.)*
