@@ -1,12 +1,15 @@
 <?php
 namespace App\Controllers\Igreja;
 
+use App\Core\Config;
 use App\Core\Controller;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\View;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\TenantMiddleware;
+use App\Services\ModuleAccessService;
+use App\Services\DashboardService;
 
 if (!defined('MONANA')) {
     http_response_code(403);
@@ -36,9 +39,15 @@ final class DashboardController extends Controller
         if ($churchName === '') {
             $churchName = 'A tua igreja';
         }
-        $content = $view->render('igreja/dashboard', [
+        $allowedModules = (new ModuleAccessService())->modules(
+            (int) ($authenticatedUser['id'] ?? 0),
+            $tenantId
+        );
+        $dashboardData = (new DashboardService())->resumo($tenantId, $allowedModules);
+        $content = $view->render('igreja/dashboard', array_merge($dashboardData, [
             'churchName' => $churchName,
-        ]);
+            'hasMigratedModules' => $dashboardData['activados'] !== [],
+        ]));
         $html = $view->render('layouts/app', [
             'content' => $content,
             'title' => 'Painel da igreja',
@@ -47,6 +56,18 @@ final class DashboardController extends Controller
             'actorName' => (string) ($authenticatedUser['nome_completo'] ?? 'Utilizador'),
             'actorRole' => (string) ($authenticatedUser['papel'] ?? ''),
             'tenantName' => $churchName,
+            'allowedModules' => $allowedModules,
+            'membersEnabled' => Config::bool('MEMBERS_MVC_ENABLED', false),
+            'registryEnabled' => Config::bool('COTAS_MVC_ENABLED', false),
+            'listsEnabled' => Config::bool('LISTS_MVC_ENABLED', false),
+            'expensesEnabled' => Config::bool('EXPENSES_MVC_ENABLED', false),
+            'yearEndEnabled' => Config::bool('YEAR_END_MVC_ENABLED', false),
+            'reportsEnabled' => Config::bool('REPORTS_MVC_ENABLED', false),
+            'usersEnabled' => Config::bool('USERS_MVC_ENABLED', false),
+            'auditEnabled' => Config::bool('AUDIT_MVC_ENABLED', false),
+            'backupsEnabled' => Config::bool('BACKUPS_MVC_ENABLED', false),
+            'profileEnabled' => Config::bool('PROFILE_MVC_ENABLED', false),
+            'settingsEnabled' => Config::bool('SETTINGS_MVC_ENABLED', false),
             'footerText' => 'MonanaEclésia · ' . $churchName . ' · Protecção de dados pessoais — Lei n.º 22/11 de Angola',
         ]);
         return Response::html($html);

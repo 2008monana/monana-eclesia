@@ -338,7 +338,7 @@ Estas regras são o que os testes de regressão da Fase 7 vão validar.
 | Logótipo | `assets/img/logo.png`, `logo-mark.png`, favicons | |
 | Classes estruturais | `app`, `sidebar`, `sb-brand`, `sb-nav`, `sb-label`, `sb-item`, `sub`, `main`, `topbar`, `content`, `page-head`, `stat-card`, `metric-card`, `panel`, `btn-primary`, `grid-stats`, `footer-note`, `modal-overlay`, `modal-box` | usadas nas vistas extraídas |
 | Login | `.auth`, `.auth-brand`, `.auth-panel`, `.auth-card`, `.logo`, `.mark-sm`, `.tagline`, `.legal`, `.field`, `.toggle-eye`, `.check` | layout dividido |
-| PDFs | `includes/pdf-theme.php` (legado) e `app/Views/pdf/layout.php` (MVC) | o novo layout recebe a identidade da igreja; ligar os geradores só ao migrar cada módulo na Fase 5 |
+| PDFs | `includes/pdf-theme.php` (legado) e `app/Views/pdf/layout.php` (MVC) | os geradores MVC de Cotas, Listas, Fim de Ano, Relatórios e Auditoria usam o layout comum; ver o estado/gates em `docs/fase-05-membros.md` |
 | Emails | `app/Views/emails/*` | frame HTML reutilizável, texto em pt-AO e escaping dos dados dinâmicos |
 
 ### 7.2 Textos a parametrizar por igreja
@@ -373,32 +373,35 @@ Convenções: rota nova em português, sem `.php`; **301 permanentes** das rotas
 
 ### 8.3 Módulos da igreja
 
-| Módulo | Páginas antigas | Novo controlador::acção | Rota nova (exemplos) | Repository |
-|---|---|---|---|---|
-| Dashboard | `dashboard/index.php` | `Igreja\DashboardController::index` | `/dashboard` | vários (só leitura, agregados) |
-| Membros | `members/index,add,edit,view,delete,toggle-status,historico-pagamentos` | `Igreja\MembroController::index,criar,editar,ver,apagar,alternarEstado,historico` | `/membros`, `/membros/novo`, `/membros/{id}/editar`, `/membros/{id}`, `/membros/{id}/historico` | `MembroRepository` |
-| Cotas | `registry/index,add,edit,delete,generate-pdf,recalcular-referencias` | `Igreja\CotaController::index,criar,editar,apagar,pdf,recalcularReferencias` | `/cotas`, `/cotas/nova`, `/cotas/{id}/editar`, `/cotas/pdf`, `/cotas/recalcular-referencias` | `CotaDiariaRepository` + `CotaService` |
-| Listas | `lists/index,mamas,papas,jovens,generate-pdf` | `Igreja\ListaController::index,mamas,papas,jovens,pdf` | `/listas`, `/listas/mamas`, `/listas/papas`, `/listas/jovens`, `/listas/pdf` | `MembroRepository` + `CotaDiariaRepository` + `ListaService` |
-| Fim de Ano | `year-end/index,register,remove,toggle-status,get-saldo,generate-pdf` | `Igreja\FimAnoController::index,registar,remover,alternarEstado,saldo,pdf` | `/fim-de-ano`, `/fim-de-ano/saldo`, `/fim-de-ano/pdf` | `ContribuicaoFimAnoRepository` + `FimAnoService` |
-| Saídas | `expenses/index,add,edit,delete` | `Igreja\SaidaController::index,criar,editar,apagar` | `/saidas`, `/saidas/nova`, `/saidas/{id}/editar` | `SaidaRepository` |
-| Relatórios | `reports/index,annual,expenses,export-excel,generate-pdf,generate-expenses-pdf` | `Igreja\RelatorioController::financeiro,anual,saidas,excel,pdf,pdfSaidas` | `/relatorios`, `/relatorios/anual`, `/relatorios/saidas`, `/relatorios/excel` | `RelatorioRepository` + `RelatorioService` |
-| Utilizadores | `users/index,add,edit,delete,toggle-status,reset-password` | `Igreja\UtilizadorController::index,criar,editar,apagar,alternarEstado,redefinirSenha` | `/utilizadores`, `/utilizadores/novo`, `/utilizadores/{id}/editar` | `UsuarioRepository` |
-| Auditoria | `audit/index,generate-pdf` | `Igreja\AuditoriaController::index,pdf` | `/auditoria`, `/auditoria/pdf` | `LogAuditoriaRepository` |
-| Backups | `backups/index,export-sql,export-excel` | `Igreja\BackupController::index,sql,excel` | `/backups`, `/backups/sql`, `/backups/excel` | `BackupRepository` (por igreja, **A9**) |
-| Perfil | `profile/index.php` | `Igreja\PerfilController::index,guardar` | `/perfil` | `UsuarioRepository` |
-| Configurações | *(novo)* | `Igreja\ConfiguracaoController::index,guardar` | `/configuracoes` | `ConfiguracaoIgrejaRepository` |
+| Módulo | Páginas antigas | Controller / rotas canónicas | Repository / service |
+|---|---|---|---|
+| Dashboard | `dashboard/index.php` | `DashboardController::index` · `/painel` | `DashboardRepository` + `DashboardService` |
+| Membros | `members/index,add,edit,view,delete,toggle-status` | `MembroController` · `/membros`, `/membros/novo`, `/membros/{id}`, `/membros/{id}/editar` | `MembroRepository` + `MembroService` |
+| Histórico de pagamentos | `members/historico-pagamentos` | Continua 503 sem fallback; aguarda integração e validação dos módulos financeiros | — |
+| Cotas | `registry/index,add,edit,delete,generate-pdf` | `CotaController` · `/cotas`, `/cotas/novo`, `/cotas/{id}/editar`, `/cotas/pdf` | `CotaDiariaRepository` + `CotaService` |
+| Recálculo de referências | `registry/recalcular-referencias` | Continua 503; reescrita histórica aguarda pré-visualização e reversão aprovadas | — |
+| Listas | `lists/index,mamas,papas,jovens,generate-pdf` | `ListaController` · `/listas`, `/listas/mamas`, `/listas/papas`, `/listas/jovens`, `/listas/criancas`, `/listas/pdf` | `ListaRepository` + `ListaService` |
+| Saídas | `expenses/index,add,edit,delete` | `SaidaController` · `/saidas`, `/saidas/nova`, `/saidas/{id}/editar` | `SaidaRepository` + `SaidaService` |
+| Fim de Ano | `year-end/index,register,remove,toggle-status,get-saldo,generate-pdf` | `FimAnoController` · `/contribuicoes-fim-de-ano`, `/contribuicoes-fim-de-ano/saldo`, `/contribuicoes-fim-de-ano/pdf` | `ContribuicaoFimAnoRepository` + `FimAnoService` |
+| Relatórios/PDF | `reports/index,annual,expenses,export-excel,generate-pdf,generate-expenses-pdf` | `RelatorioController` · `/relatorios`, `/relatorios/anual`, `/relatorios/despesas`, `/relatorios/pdf`, `/relatorios/pdf-despesas`, `/relatorios/exportar-excel` (CSV) | `RelatorioRepository` + `RelatorioService` |
+| Utilizadores | `users/index,add,edit,delete,toggle-status,reset-password` | `UtilizadorController` · `/utilizadores`, `/utilizadores/novo`, `/utilizadores/{id}/editar` | `UsuarioRepository` + `UsuarioService` |
+| Auditoria | `audit/index,generate-pdf` | `AuditoriaController` · `/auditoria`, `/auditoria/pdf` | `AuditRepository` + `AuditoriaConsultaService` |
+| Backups | `backups/index,export-sql,export-excel` | `BackupController` · `/copias-de-seguranca` e POST `/copias-de-seguranca/exportar` (JSON; sem SQL/restauro) | `BackupRepository` + `BackupService` |
+| Perfil | `profile/index.php` | `PerfilController` · `/perfil` | `UsuarioRepository` + `PerfilService` |
+| Configurações | *(novo)* | `ConfiguracaoController` · `/configuracoes` | `ConfiguracaoRepository` + `ConfiguracaoService` |
+
 
 ### 8.4 Services e responsabilidades
 
 | Service | Responsabilidade | Regras |
 |---|---|---|
-| `CotaService` | Cálculo do mês de referência, saldo, quitação por adiantamento, recálculo | **RN01–RN07** |
+| `CotaService` | Cálculo da referência mensal/anual móvel, saldo e quitação por adiantamento; recálculo histórico permanece bloqueado | **RN01–RN07** |
 | `AuthService` | Login, logout, tokens, sessões, primeiro acesso, força bruta | secção 6 |
 | `ProvisionamentoIgrejaService` | Criação de igreja + admin + configurações + permissões + fila de email **numa transacção** | secção 9 do prompt |
 | `MailService` | Renderiza templates, enfileira, envia (SMTP/Log), actualiza estado e tentativas | `MailerInterface` |
 | `AuditoriaService` | Escrita de logs com igreja, utilizador, IP, data | RN10 |
 | `RelatorioService` | Agregações financeiras (cotas, fundos, categorias, séries mensais) | RN11–RN12 |
-| `BackupService` | Exportações SQL/Excel **por igreja** | A9 |
+| `BackupService` | Exportação JSON tenant-scoped, sem credenciais nem tokens; SQL/restauro indisponíveis | A9 |
 | `ListaService` | Grelhas de domingos, selos de quitação | RN06 |
 
 ---
@@ -515,6 +518,10 @@ Os testes de RN01–RN04 (`CotaService`) serão escritos com um duplo de reposit
 | **7. Testes e segurança** | Isolamento entre igrejas (ID directo, listas, relatórios, PDF, Excel, backup), regressões RN01–RN14, revisão OWASP | Relatório de resultados |
 | **8. Documentação** | `README` (instalação, `.env`, migrações, SMTP, deploy FTP na InfinityFree) | Revisão de quem instala |
 
+### Progresso da Fase 5
+
+A sequência completa da Fase 5 — **Membros → Cotas → Listas → Saídas → Fim de Ano → Relatórios/PDF → Utilizadores → Auditoria → Backups → Perfil → Dashboard → Configurações** — tem implementação MVC documentada em `docs/fase-05-membros.md`. Os gates de todos os módulos permanecem `false` por omissão até à Fase 6, porque as tabelas de negócio ainda não receberam nem tiveram validado o `igreja_id` real. O histórico completo de pagamentos de membros e o recálculo de referências antigas continuam 503, sem fallback procedural, por dependerem de integração financeira e correcção segura de dados históricos. D‑06 foi decidido e aplicado ao código: a periodicidade anual usa ciclos móveis de 12 meses ancorados na data inicial manual da igreja, sem reinício no ano civil. Nenhuma migration, consulta de produção ou alteração de dados foi executada.
+
 ---
 
 ## 13. Decisões registadas e pontos pendentes
@@ -522,7 +529,7 @@ Os testes de RN01–RN04 (`CotaService`) serão escritos com um duplo de reposit
 | ID | Decisão ou ponto | Estado e regra |
 |---|---|---|
 | **D‑02** | A ferramenta `recalcular-referencias` deve dividir pagamentos ou alinhar com RN02 (**registo inteiro** no período mais antigo)? | **Decidido:** alinhar com RN02; não fragmentar um pagamento real. |
-| **D‑06** | Como definir o valor e o arranque das cotas/contribuições? | **Decidido:** o admin define o valor e periodicidade da cota (`mensal`/`anual`); pastor/admin escolhe manualmente o período de início de cada módulo. Não se infere o arranque de `igrejas.criada_em`; se o pastor seleccionar Junho, o cálculo começa em Junho. Na igreja 1, manter inicialmente 1000 Kz/mês e mapear o início histórico na Fase 6. Antes de migrar o módulo de cotas na Fase 5, fixar a regra de fronteira do modo anual (ano civil ou período de 12 meses). |
+| **D‑06** | Como definir o valor, o arranque e a fronteira anual das cotas/contribuições? | **Decidido:** o admin define o valor e periodicidade da cota (`mensal`/`anual`); pastor/admin escolhe manualmente o período de início de cada módulo. Não se infere o arranque de `igrejas.criada_em`; se o pastor seleccionar Junho, o cálculo começa em Junho. Na igreja 1, manter inicialmente 1000 Kz/mês e mapear o início histórico na Fase 6. No modo anual, cada período é um ciclo móvel de 12 meses ancorado na data de início definida para a igreja; não reinicia em Janeiro/ano civil. |
 | **D‑07** | Qual o alvo de alojamento? | **Decidido:** InfinityFree gratuito; ficheiros dentro de `htdocs`, pastas internas protegidas e front controller único em `public/index.php`, chamado pela entrada da raiz. |
 
 *(D‑01, D‑03, D‑04 e D‑05 já estão decididas acima e seguem a opção mais simples.)*

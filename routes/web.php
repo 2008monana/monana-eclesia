@@ -5,9 +5,9 @@ if (!defined('MONANA')) {
 }
 
 /**
- * Rotas públicas novas em português. Até à migração de cada módulo, a rota
- * chama uma página procedural da allowlist; os endereços ingleses antigos
- * fazem 301 em GET/HEAD e mantêm POST apenas para compatibilidade transitória.
+ * Rotas canónicas em português. Os módulos migrados usam controllers MVC;
+ * apenas os endpoints transitórios explicitamente marcados recorrem à ponte
+ * fail-closed, e os aliases ingleses de leitura fazem 301 para pt-AO.
  */
 return static function (\App\Core\Router $router): void {
     // Rotas novas de autenticação, setup inicial e Superadmin.
@@ -71,192 +71,243 @@ return static function (\App\Core\Router $router): void {
         };
     };
 
-    // Rotas canónicas em português; cada uma substitui a respectiva página antiga
-    // quando o módulo for migrado nas fases seguintes.
-    $portugueseRoutes = [
+    // Membros, Cotas, Listas e módulos seguintes usam controladores MVC próprios.
+    $memberController = \App\Controllers\Igreja\MembroController::class;
+    $router->get('/membros', [$memberController, 'index']);
+    $router->get('/membros/novo', [$memberController, 'createForm']);
+    $router->post('/membros/novo', [$memberController, 'create']);
+    $router->get('/membros/editar', [$memberController, 'editByQuery']);
+    $router->post('/membros/editar', [$memberController, 'updateByQuery']);
+    $router->post('/membros/apagar', [$memberController, 'deleteByPost']);
+    $router->post('/membros/alterar-estado', [$memberController, 'toggleByPost']);
+    $router->get('/membros/ver', [$memberController, 'showByQuery']);
 
-        '/membros' => 'members/index.php',
-        '/membros/novo' => 'members/add.php',
-        '/membros/editar' => 'members/edit.php',
-        '/membros/apagar' => 'members/delete.php',
-        '/membros/alterar-estado' => 'members/toggle-status.php',
-        '/membros/historico-pagamentos' => 'members/historico-pagamentos.php',
-        '/membros/ver' => 'members/view.php',
+    // O histórico de pagamentos continua bloqueado até migrar Cotas. Esta rota
+    // específica tem de anteceder /membros/{id}.
+    $pendingMemberHistory = $legacy('members/historico-pagamentos.php');
+    $router->get('/membros/historico-pagamentos', $pendingMemberHistory);
+    $router->post('/membros/historico-pagamentos', $pendingMemberHistory);
 
-        '/cotas' => 'registry/index.php',
-        '/cotas/novo' => 'registry/add.php',
-        '/cotas/editar' => 'registry/edit.php',
-        '/cotas/apagar' => 'registry/delete.php',
-        '/cotas/pdf' => 'registry/generate-pdf.php',
-        '/cotas/recalcular-referencias' => 'registry/recalcular-referencias.php',
+    $router->get('/membros/{id}/editar', [$memberController, 'editForm']);
+    $router->post('/membros/{id}/editar', [$memberController, 'update']);
+    $router->get('/membros/{id}/ver', [$memberController, 'showByLegacyRoute']);
+    $router->post('/membros/{id}/apagar', [$memberController, 'delete']);
+    $router->post('/membros/{id}/estado', [$memberController, 'toggleStatus']);
+    $router->post('/membros/{id}/alterar-estado', [$memberController, 'toggleStatus']);
+    $router->get('/membros/{id}', [$memberController, 'show']);
 
-        '/listas' => 'lists/index.php',
-        '/listas/pdf' => 'lists/generate-pdf.php',
-        '/listas/jovens' => 'lists/jovens.php',
-        '/listas/mamas' => 'lists/mamas.php',
-        '/listas/papas' => 'lists/papas.php',
+    // Endereços ingleses existentes redireccionam em GET/HEAD; POST usa o
+    // controlador MVC (nunca volta a executar SQL procedural).
+    foreach (['/members', '/members/index'] as $legacyMembersIndex) {
+        $router->get($legacyMembersIndex, $redirect('/membros'));
+    }
+    $router->get('/members/add', $redirect('/membros/novo'));
+    $router->post('/members/add', [$memberController, 'create']);
+    $router->get('/members/edit', $redirect('/membros/editar'));
+    $router->post('/members/edit', [$memberController, 'updateByQuery']);
+    $router->get('/members/delete', $redirect('/membros'));
+    $router->post('/members/delete', [$memberController, 'deleteByPost']);
+    $router->get('/members/toggle-status', $redirect('/membros'));
+    $router->post('/members/toggle-status', [$memberController, 'toggleByPost']);
+    $router->get('/members/view', $redirect('/membros/ver'));
+    $router->get('/members/view/{id}', $redirect('/membros/{id}'));
+    $router->get('/members/edit/{id}', $redirect('/membros/{id}/editar'));
+    $router->post('/members/edit/{id}', [$memberController, 'update']);
+    $router->get('/members/delete/{id}', $redirect('/membros/{id}'));
+    $router->post('/members/delete/{id}', [$memberController, 'delete']);
+    $router->get('/members/toggle-status/{id}', $redirect('/membros/{id}'));
+    $router->post('/members/toggle-status/{id}', [$memberController, 'toggleStatus']);
 
-        '/saidas' => 'expenses/index.php',
-        '/saidas/nova' => 'expenses/add.php',
-        '/saidas/editar' => 'expenses/edit.php',
-        '/saidas/apagar' => 'expenses/delete.php',
+    $router->get('/members/historico-pagamentos', $redirect('/membros/historico-pagamentos'));
+    $router->post('/members/historico-pagamentos', $pendingMemberHistory);
 
-        '/contribuicoes-fim-de-ano' => 'year-end/index.php',
-        '/contribuicoes-fim-de-ano/registar' => 'year-end/register.php',
-        '/contribuicoes-fim-de-ano/remover' => 'year-end/remove.php',
-        '/contribuicoes-fim-de-ano/alterar-estado' => 'year-end/toggle-status.php',
-        '/contribuicoes-fim-de-ano/saldo' => 'year-end/get-saldo.php',
-        '/contribuicoes-fim-de-ano/pdf' => 'year-end/generate-pdf.php',
+    // Cotas (segunda etapa da Fase 5); o recálculo permanece bloqueado até revisão funcional.
+    $cotaController = \App\Controllers\Igreja\CotaController::class;
+    $router->get('/cotas', [$cotaController, 'index']);
+    $router->get('/cotas/novo', [$cotaController, 'createForm']);
+    $router->post('/cotas/novo', [$cotaController, 'create']);
+    $router->get('/cotas/editar', [$cotaController, 'editByQuery']);
+    $router->post('/cotas/editar', [$cotaController, 'updateByQuery']);
+    $router->post('/cotas/apagar', [$cotaController, 'deleteByPost']);
+    $router->get('/cotas/{id}/editar', [$cotaController, 'editForm']);
+    $router->post('/cotas/{id}/editar', [$cotaController, 'update']);
+    $router->post('/cotas/{id}/apagar', [$cotaController, 'delete']);
+    $pendingCotaRecalculation = $legacy('registry/recalcular-referencias.php');
+    $router->get('/cotas/pdf', [$cotaController, 'pdf']);
+    $router->get('/cotas/recalcular-referencias', $pendingCotaRecalculation);
+    $router->post('/cotas/recalcular-referencias', $pendingCotaRecalculation);
 
-        '/relatorios' => 'reports/index.php',
-        '/relatorios/anual' => 'reports/annual.php',
-        '/relatorios/despesas' => 'reports/expenses.php',
-        '/relatorios/exportar-excel' => 'reports/export-excel.php',
-        '/relatorios/pdf-despesas' => 'reports/generate-expenses-pdf.php',
-        '/relatorios/pdf' => 'reports/generate-pdf.php',
+    foreach (['/registry', '/registry/index'] as $legacyCotaIndex) {
+        $router->get($legacyCotaIndex, $redirect('/cotas'));
+    }
+    $router->get('/registry/add', $redirect('/cotas/novo'));
+    $router->post('/registry/add', [$cotaController, 'create']);
+    $router->get('/registry/edit', $redirect('/cotas/editar'));
+    $router->post('/registry/edit', [$cotaController, 'updateByQuery']);
+    $router->get('/registry/delete', $redirect('/cotas'));
+    $router->post('/registry/delete', [$cotaController, 'deleteByPost']);
+    $router->get('/registry/generate-pdf', $redirect('/cotas/pdf'));
+    $router->get('/registry/recalcular-referencias', $redirect('/cotas/recalcular-referencias'));
+    $router->post('/registry/recalcular-referencias', $pendingCotaRecalculation);
+    $router->get('/registry/edit/{id}', $redirect('/cotas/{id}/editar'));
+    $router->post('/registry/edit/{id}', [$cotaController, 'update']);
+    $router->get('/registry/delete/{id}', $redirect('/cotas'));
+    $router->post('/registry/delete/{id}', [$cotaController, 'delete']);
 
-        '/utilizadores' => 'users/index.php',
-        '/utilizadores/novo' => 'users/add.php',
-        '/utilizadores/editar' => 'users/edit.php',
-        '/utilizadores/apagar' => 'users/delete.php',
-        '/utilizadores/redefinir-senha' => 'users/reset-password.php',
-        '/utilizadores/alterar-estado' => 'users/toggle-status.php',
+    // Listas reutilizam os dados tenant-scoped de membros e cotas.
+    $listaController = \App\Controllers\Igreja\ListaController::class;
+    $router->get('/listas', [$listaController, 'index']);
+    $router->get('/listas/mamas', [$listaController, 'mamas']);
+    $router->get('/listas/papas', [$listaController, 'papas']);
+    $router->get('/listas/jovens', [$listaController, 'jovens']);
+    $router->get('/listas/criancas', [$listaController, 'criancas']);
+    $router->get('/listas/pdf', [$listaController, 'pdf']);
+    foreach (['/lists', '/lists/index'] as $legacyListaIndex) {
+        $router->get($legacyListaIndex, $redirect('/listas'));
+    }
+    foreach (['mamas', 'papas', 'jovens'] as $legacyCategory) {
+        $router->get('/lists/' . $legacyCategory, $redirect('/listas/' . $legacyCategory));
+    }
+    $router->get('/lists/generate-pdf', $redirect('/listas/pdf'));
 
-        '/auditoria' => 'audit/index.php',
-        '/auditoria/pdf' => 'audit/generate-pdf.php',
+    // Saídas mantêm a origem do fundo em cada registo; não há transferência entre fundos.
+    $saidaController = \App\Controllers\Igreja\SaidaController::class;
+    $router->get('/saidas', [$saidaController, 'index']);
+    $router->get('/saidas/nova', [$saidaController, 'createForm']);
+    $router->post('/saidas/nova', [$saidaController, 'create']);
+    $router->get('/saidas/editar', [$saidaController, 'editByQuery']);
+    $router->post('/saidas/editar', [$saidaController, 'updateByQuery']);
+    $router->post('/saidas/apagar', [$saidaController, 'deleteByPost']);
+    $router->get('/saidas/{id}/editar', [$saidaController, 'editForm']);
+    $router->post('/saidas/{id}/editar', [$saidaController, 'update']);
+    $router->post('/saidas/{id}/apagar', [$saidaController, 'delete']);
+    foreach (['/expenses', '/expenses/index'] as $legacyExpenseIndex) {
+        $router->get($legacyExpenseIndex, $redirect('/saidas'));
+    }
+    $router->get('/expenses/add', $redirect('/saidas/nova'));
+    $router->post('/expenses/add', [$saidaController, 'create']);
+    $router->get('/expenses/edit', $redirect('/saidas/editar'));
+    $router->post('/expenses/edit', [$saidaController, 'updateByQuery']);
+    $router->get('/expenses/delete', $redirect('/saidas'));
+    $router->post('/expenses/delete', [$saidaController, 'deleteByPost']);
+    $router->get('/expenses/edit/{id}', $redirect('/saidas/{id}/editar'));
+    $router->post('/expenses/edit/{id}', [$saidaController, 'update']);
+    $router->get('/expenses/delete/{id}', $redirect('/saidas'));
+    $router->post('/expenses/delete/{id}', [$saidaController, 'delete']);
 
-        '/copias-de-seguranca' => 'backups/index.php',
-        '/copias-de-seguranca/exportar-excel' => 'backups/export-excel.php',
-        '/copias-de-seguranca/exportar-sql' => 'backups/export-sql.php',
-        '/perfil' => 'profile/index.php',
+    // Contribuições de fim de ano: contribuição individual não excede a meta anual.
+    $fimAnoController = \App\Controllers\Igreja\FimAnoController::class;
+    $router->get('/contribuicoes-fim-de-ano', [$fimAnoController, 'index']);
+    $router->post('/contribuicoes-fim-de-ano/registar', [$fimAnoController, 'registar']);
+    $router->post('/contribuicoes-fim-de-ano/remover', [$fimAnoController, 'remover']);
+    $router->post('/contribuicoes-fim-de-ano/alterar-estado', [$fimAnoController, 'alternarEstado']);
+    $router->get('/contribuicoes-fim-de-ano/saldo', [$fimAnoController, 'saldo']);
+    $router->get('/contribuicoes-fim-de-ano/pdf', [$fimAnoController, 'pdf']);
+    foreach (['/year-end', '/year-end/index'] as $legacyFimAnoIndex) {
+        $router->get($legacyFimAnoIndex, $redirect('/contribuicoes-fim-de-ano'));
+    }
+    $router->get('/year-end/register', $redirect('/contribuicoes-fim-de-ano'));
+    $router->post('/year-end/register', [$fimAnoController, 'registar']);
+    $router->get('/year-end/remove', $redirect('/contribuicoes-fim-de-ano'));
+    $router->post('/year-end/remove', [$fimAnoController, 'remover']);
+    $router->get('/year-end/toggle-status', $redirect('/contribuicoes-fim-de-ano'));
+    $router->post('/year-end/toggle-status', [$fimAnoController, 'alternarEstado']);
+    $router->get('/year-end/get-saldo', $redirect('/contribuicoes-fim-de-ano/saldo'));
+    $router->post('/year-end/get-saldo', [$fimAnoController, 'saldo']);
+    $router->get('/year-end/generate-pdf', $redirect('/contribuicoes-fim-de-ano/pdf'));
+
+    // Relatórios consultam agregações isoladas por igreja; PDFs usam Dompdf.
+    $relatorioController = \App\Controllers\Igreja\RelatorioController::class;
+    $router->get('/relatorios', [$relatorioController, 'financeiro']);
+    $router->get('/relatorios/anual', [$relatorioController, 'anual']);
+    $router->get('/relatorios/despesas', [$relatorioController, 'saidas']);
+    $router->get('/relatorios/exportar-excel', [$relatorioController, 'excel']);
+    $router->get('/relatorios/pdf', [$relatorioController, 'pdf']);
+    $router->get('/relatorios/pdf-despesas', [$relatorioController, 'pdfSaidas']);
+    $reportAliases = [
+        '/reports' => '/relatorios',
+        '/reports/index' => '/relatorios',
+        '/reports/annual' => '/relatorios/anual',
+        '/reports/expenses' => '/relatorios/despesas',
+        '/reports/export-excel' => '/relatorios/exportar-excel',
+        '/reports/generate-expenses-pdf' => '/relatorios/pdf-despesas',
+        '/reports/generate-pdf' => '/relatorios/pdf',
     ];
-
-    foreach ($portugueseRoutes as $path => $file) {
-        $handler = $legacy($file);
-        $router->get($path, $handler);
-        $router->post($path, $handler);
+    foreach ($reportAliases as $path => $target) {
+        $router->get($path, $redirect($target));
     }
 
-    $portugueseIdRoutes = [
-        '/membros/{id}' => 'members/view.php',
-        '/membros/{id}/ver' => 'members/view.php',
-        '/membros/{id}/editar' => 'members/edit.php',
-        '/membros/{id}/apagar' => 'members/delete.php',
-        '/membros/{id}/alterar-estado' => 'members/toggle-status.php',
-        '/cotas/{id}/editar' => 'registry/edit.php',
-        '/cotas/{id}/apagar' => 'registry/delete.php',
-        '/saidas/{id}/editar' => 'expenses/edit.php',
-        '/saidas/{id}/apagar' => 'expenses/delete.php',
-        '/utilizadores/{id}/editar' => 'users/edit.php',
-        '/utilizadores/{id}/apagar' => 'users/delete.php',
-        '/utilizadores/{id}/alterar-estado' => 'users/toggle-status.php',
-        '/contribuicoes-fim-de-ano/{id}/remover' => 'year-end/remove.php',
-        '/contribuicoes-fim-de-ano/{id}/alterar-estado' => 'year-end/toggle-status.php',
+    // Gestão local; o papel administrador da igreja não pode ser concedido pela UI.
+    $utilizadorController = \App\Controllers\Igreja\UtilizadorController::class;
+    $router->get('/utilizadores', [$utilizadorController, 'index']);
+    $router->get('/utilizadores/novo', [$utilizadorController, 'createForm']);
+    $router->post('/utilizadores/novo', [$utilizadorController, 'create']);
+    $router->get('/utilizadores/editar', [$utilizadorController, 'editByQuery']);
+    $router->post('/utilizadores/editar', [$utilizadorController, 'updateByQuery']);
+    $router->post('/utilizadores/apagar', [$utilizadorController, 'remover']);
+    $router->post('/utilizadores/alterar-estado', [$utilizadorController, 'toggleStatus']);
+    $router->post('/utilizadores/redefinir-senha', [$utilizadorController, 'enviarLinkSenha']);
+    $router->get('/utilizadores/{id}/editar', [$utilizadorController, 'editForm']);
+    $router->post('/utilizadores/{id}/editar', [$utilizadorController, 'update']);
+    $router->post('/utilizadores/{id}/estado', [$utilizadorController, 'toggleStatus']);
+    $router->post('/utilizadores/{id}/apagar', [$utilizadorController, 'remover']);
+    $router->post('/utilizadores/{id}/redefinir-senha', [$utilizadorController, 'enviarLinkSenha']);
+    $userAliases = [
+        '/users' => '/utilizadores',
+        '/users/index' => '/utilizadores',
+        '/users/add' => '/utilizadores/novo',
+        '/users/edit' => '/utilizadores/editar',
+        '/users/delete' => '/utilizadores',
+        '/users/reset-password' => '/utilizadores',
+        '/users/toggle-status' => '/utilizadores',
     ];
-
-    foreach ($portugueseIdRoutes as $path => $file) {
-        $handler = $legacy($file);
-        $router->get($path, $handler);
-        $router->post($path, $handler);
+    foreach ($userAliases as $path => $target) {
+        $router->get($path, $redirect($target));
     }
+    $router->get('/users/edit/{id}', $redirect('/utilizadores/{id}/editar'));
 
-    // Rotas inglesas previamente publicadas: leitura faz 301 para pt-AO;
-    // POST permanece ligado ao endpoint antigo até o formulário ser migrado.
-    $englishAliases = [
-        '/logout' => ['/sair', 'auth/logout.php'],
-        '/forgot-password' => ['/recuperar-senha', 'auth/forgot-password.php'],
-        '/reset-password' => ['/resetar-senha', 'auth/reset-password.php'],
-        '/dashboard' => ['/painel', 'dashboard/index.php'],
-        '/dashboard/index' => ['/painel', 'dashboard/index.php'],
+    // Auditoria visível apenas a administradores locais, sempre tenant-scoped.
+    $auditoriaController = \App\Controllers\Igreja\AuditoriaController::class;
+    $router->get('/auditoria', [$auditoriaController, 'index']);
+    $router->get('/auditoria/pdf', [$auditoriaController, 'pdf']);
+    $router->get('/audit', $redirect('/auditoria'));
+    $router->get('/audit/index', $redirect('/auditoria'));
+    $router->get('/audit/generate-pdf', $redirect('/auditoria/pdf'));
 
-        '/members' => ['/membros', 'members/index.php'],
-        '/members/index' => ['/membros', 'members/index.php'],
-        '/members/add' => ['/membros/novo', 'members/add.php'],
-        '/members/edit' => ['/membros/editar', 'members/edit.php'],
-        '/members/delete' => ['/membros/apagar', 'members/delete.php'],
-        '/members/toggle-status' => ['/membros/alterar-estado', 'members/toggle-status.php'],
-        '/members/historico-pagamentos' => ['/membros/historico-pagamentos', 'members/historico-pagamentos.php'],
-        '/members/view' => ['/membros/ver', 'members/view.php'],
+    // Backups locais são JSON tenant-scoped; SQL executável e restauro ficam indisponíveis.
+    $backupController = \App\Controllers\Igreja\BackupController::class;
+    $router->get('/copias-de-seguranca', [$backupController, 'index']);
+    $router->post('/copias-de-seguranca/exportar', [$backupController, 'exportar']);
+    $router->get('/copias-de-seguranca/exportar-excel', $redirect('/copias-de-seguranca'));
+    $router->get('/copias-de-seguranca/exportar-sql', $redirect('/copias-de-seguranca'));
+    $router->get('/backups', $redirect('/copias-de-seguranca'));
+    $router->get('/backups/index', $redirect('/copias-de-seguranca'));
+    $router->get('/backups/export-excel', $redirect('/copias-de-seguranca'));
+    $router->get('/backups/export-sql', $redirect('/copias-de-seguranca'));
 
-        '/registry' => ['/cotas', 'registry/index.php'],
-        '/registry/index' => ['/cotas', 'registry/index.php'],
-        '/registry/add' => ['/cotas/novo', 'registry/add.php'],
-        '/registry/edit' => ['/cotas/editar', 'registry/edit.php'],
-        '/registry/delete' => ['/cotas/apagar', 'registry/delete.php'],
-        '/registry/generate-pdf' => ['/cotas/pdf', 'registry/generate-pdf.php'],
-        '/registry/recalcular-referencias' => ['/cotas/recalcular-referencias', 'registry/recalcular-referencias.php'],
+    // Perfil pessoal; a alteração de senha continua no fluxo autenticado dedicado.
+    $perfilController = \App\Controllers\Igreja\PerfilController::class;
+    $router->get('/perfil', [$perfilController, 'index']);
+    $router->post('/perfil', [$perfilController, 'actualizar']);
+    $router->get('/profile', $redirect('/perfil'));
+    $router->get('/profile/index', $redirect('/perfil'));
 
-        '/lists' => ['/listas', 'lists/index.php'],
-        '/lists/index' => ['/listas', 'lists/index.php'],
-        '/lists/generate-pdf' => ['/listas/pdf', 'lists/generate-pdf.php'],
-        '/lists/jovens' => ['/listas/jovens', 'lists/jovens.php'],
-        '/lists/mamas' => ['/listas/mamas', 'lists/mamas.php'],
-        '/lists/papas' => ['/listas/papas', 'lists/papas.php'],
+    $configuracaoController = \App\Controllers\Igreja\ConfiguracaoController::class;
+    $router->get('/configuracoes', [$configuracaoController, 'index']);
+    $router->post('/configuracoes', [$configuracaoController, 'actualizar']);
+    $router->get('/settings', $redirect('/configuracoes'));
+    $router->get('/settings/index', $redirect('/configuracoes'));
 
-        '/expenses' => ['/saidas', 'expenses/index.php'],
-        '/expenses/index' => ['/saidas', 'expenses/index.php'],
-        '/expenses/add' => ['/saidas/nova', 'expenses/add.php'],
-        '/expenses/edit' => ['/saidas/editar', 'expenses/edit.php'],
-        '/expenses/delete' => ['/saidas/apagar', 'expenses/delete.php'],
-
-        '/year-end' => ['/contribuicoes-fim-de-ano', 'year-end/index.php'],
-        '/year-end/index' => ['/contribuicoes-fim-de-ano', 'year-end/index.php'],
-        '/year-end/register' => ['/contribuicoes-fim-de-ano/registar', 'year-end/register.php'],
-        '/year-end/remove' => ['/contribuicoes-fim-de-ano/remover', 'year-end/remove.php'],
-        '/year-end/toggle-status' => ['/contribuicoes-fim-de-ano/alterar-estado', 'year-end/toggle-status.php'],
-        '/year-end/get-saldo' => ['/contribuicoes-fim-de-ano/saldo', 'year-end/get-saldo.php'],
-        '/year-end/generate-pdf' => ['/contribuicoes-fim-de-ano/pdf', 'year-end/generate-pdf.php'],
-
-        '/reports' => ['/relatorios', 'reports/index.php'],
-        '/reports/index' => ['/relatorios', 'reports/index.php'],
-        '/reports/annual' => ['/relatorios/anual', 'reports/annual.php'],
-        '/reports/expenses' => ['/relatorios/despesas', 'reports/expenses.php'],
-        '/reports/export-excel' => ['/relatorios/exportar-excel', 'reports/export-excel.php'],
-        '/reports/generate-expenses-pdf' => ['/relatorios/pdf-despesas', 'reports/generate-expenses-pdf.php'],
-        '/reports/generate-pdf' => ['/relatorios/pdf', 'reports/generate-pdf.php'],
-
-        '/users' => ['/utilizadores', 'users/index.php'],
-        '/users/index' => ['/utilizadores', 'users/index.php'],
-        '/users/add' => ['/utilizadores/novo', 'users/add.php'],
-        '/users/edit' => ['/utilizadores/editar', 'users/edit.php'],
-        '/users/delete' => ['/utilizadores/apagar', 'users/delete.php'],
-        '/users/reset-password' => ['/utilizadores/redefinir-senha', 'users/reset-password.php'],
-        '/users/toggle-status' => ['/utilizadores/alterar-estado', 'users/toggle-status.php'],
-
-        '/audit' => ['/auditoria', 'audit/index.php'],
-        '/audit/index' => ['/auditoria', 'audit/index.php'],
-        '/audit/generate-pdf' => ['/auditoria/pdf', 'audit/generate-pdf.php'],
-        '/backups' => ['/copias-de-seguranca', 'backups/index.php'],
-        '/backups/index' => ['/copias-de-seguranca', 'backups/index.php'],
-        '/backups/export-excel' => ['/copias-de-seguranca/exportar-excel', 'backups/export-excel.php'],
-        '/backups/export-sql' => ['/copias-de-seguranca/exportar-sql', 'backups/export-sql.php'],
-        '/profile' => ['/perfil', 'profile/index.php'],
-        '/profile/index' => ['/perfil', 'profile/index.php'],
+    // Os restantes caminhos ingleses redireccionam apenas os pedidos de leitura;
+    // POST de autenticação já está ligado directamente aos controllers MVC acima.
+    $englishReadAliases = [
+        '/logout' => '/sair',
+        '/forgot-password' => '/recuperar-senha',
+        '/reset-password' => '/resetar-senha',
+        '/dashboard' => '/painel',
+        '/dashboard/index' => '/painel',
     ];
-
-    foreach ($englishAliases as $path => $targetAndFile) {
-        $router->get($path, $redirect($targetAndFile[0]));
-        $router->post($path, $legacy($targetAndFile[1]));
-    }
-
-    $englishIdAliases = [
-        '/members/view/{id}' => ['/membros/{id}/ver', 'members/view.php'],
-        '/members/edit/{id}' => ['/membros/{id}/editar', 'members/edit.php'],
-        '/members/delete/{id}' => ['/membros/{id}/apagar', 'members/delete.php'],
-        '/members/toggle-status/{id}' => ['/membros/{id}/alterar-estado', 'members/toggle-status.php'],
-        '/registry/edit/{id}' => ['/cotas/{id}/editar', 'registry/edit.php'],
-        '/registry/delete/{id}' => ['/cotas/{id}/apagar', 'registry/delete.php'],
-        '/expenses/edit/{id}' => ['/saidas/{id}/editar', 'expenses/edit.php'],
-        '/expenses/delete/{id}' => ['/saidas/{id}/apagar', 'expenses/delete.php'],
-        '/users/edit/{id}' => ['/utilizadores/{id}/editar', 'users/edit.php'],
-        '/users/delete/{id}' => ['/utilizadores/{id}/apagar', 'users/delete.php'],
-        '/users/toggle-status/{id}' => ['/utilizadores/{id}/alterar-estado', 'users/toggle-status.php'],
-        '/year-end/remove/{id}' => ['/contribuicoes-fim-de-ano/{id}/remover', 'year-end/remove.php'],
-        '/year-end/toggle-status/{id}' => ['/contribuicoes-fim-de-ano/{id}/alterar-estado', 'year-end/toggle-status.php'],
-    ];
-
-    foreach ($englishIdAliases as $path => $targetAndFile) {
-        $router->get($path, $redirect($targetAndFile[0]));
-        $router->post($path, $legacy($targetAndFile[1]));
+    foreach ($englishReadAliases as $path => $target) {
+        $router->get($path, $redirect($target));
     }
 };

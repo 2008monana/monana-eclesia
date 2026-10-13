@@ -28,6 +28,40 @@ $actorInitial = 'M';
 if (preg_match('/^./u', $actorName, $initialMatch) === 1 && isset($initialMatch[0])) {
     $actorInitial = strtoupper($initialMatch[0]);
 }
+$allowedModules = is_array($allowedModules ?? null) ? array_values(array_unique(array_map('strval', $allowedModules))) : [];
+$membersEnabled = isset($membersEnabled)
+    ? (bool) $membersEnabled
+    : \App\Core\Config::bool('MEMBERS_MVC_ENABLED', false);
+$registryEnabled = isset($registryEnabled)
+    ? (bool) $registryEnabled
+    : \App\Core\Config::bool('COTAS_MVC_ENABLED', false);
+$listsEnabled = isset($listsEnabled)
+    ? (bool) $listsEnabled
+    : \App\Core\Config::bool('LISTS_MVC_ENABLED', false);
+$expensesEnabled = isset($expensesEnabled)
+    ? (bool) $expensesEnabled
+    : \App\Core\Config::bool('EXPENSES_MVC_ENABLED', false);
+$yearEndEnabled = isset($yearEndEnabled)
+    ? (bool) $yearEndEnabled
+    : \App\Core\Config::bool('YEAR_END_MVC_ENABLED', false);
+$reportsEnabled = isset($reportsEnabled)
+    ? (bool) $reportsEnabled
+    : \App\Core\Config::bool('REPORTS_MVC_ENABLED', false);
+$usersEnabled = isset($usersEnabled)
+    ? (bool) $usersEnabled
+    : \App\Core\Config::bool('USERS_MVC_ENABLED', false);
+$auditEnabled = isset($auditEnabled)
+    ? (bool) $auditEnabled
+    : \App\Core\Config::bool('AUDIT_MVC_ENABLED', false);
+$backupsEnabled = isset($backupsEnabled)
+    ? (bool) $backupsEnabled
+    : \App\Core\Config::bool('BACKUPS_MVC_ENABLED', false);
+$profileEnabled = isset($profileEnabled)
+    ? (bool) $profileEnabled
+    : \App\Core\Config::bool('PROFILE_MVC_ENABLED', false);
+$settingsEnabled = isset($settingsEnabled)
+    ? (bool) $settingsEnabled
+    : \App\Core\Config::bool('SETTINGS_MVC_ENABLED', false);
 $content = (string) ($content ?? '');
 ?>
 <!doctype html>

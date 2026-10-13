@@ -26,6 +26,16 @@ class PermissionRepository
         }
     }
 
+    /** Substitui a lista de permissões dentro da mesma igreja e transacção. */
+    public function substituir(PDO $pdo, int $userId, int $churchId, array $modules): void
+    {
+        $delete = $pdo->prepare(
+            'DELETE FROM permissoes_modulo WHERE usuario_id = :usuario_id AND igreja_id = :igreja_id'
+        );
+        $delete->execute([':usuario_id' => $userId, ':igreja_id' => $churchId]);
+        $this->createDefaults($pdo, $userId, $churchId, $modules);
+    }
+
     /** Consulta por tenant explícito obtido por TenantMiddleware, nunca pelo cliente. */
     public function allowedModules(int $userId, int $churchId): array
     {

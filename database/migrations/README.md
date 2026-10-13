@@ -80,3 +80,9 @@ Em alojamento gratuito, o SMTP externo pode ser bloqueado/limitado. Se a Infinit
 ## Limites de validação deste ambiente
 
 Este ambiente não tem PHP CLI nem MySQL e não dispõe das credenciais ou do DDL real da produção. Por isso, nenhuma migração foi executada aqui. As verificações de SQL, índices, SMTP e restauração devem ser feitas primeiro numa cópia/staging com a mesma versão de MySQL/MariaDB do alojamento.
+
+## Gate de activação da Fase 5 — todos os módulos
+
+A sequência MVC completa está preparada, mas depende de atribuição tenant e de confirmação do esquema real. Mantém **todos** os gates `*_MVC_ENABLED=false` no `.env` — incluindo Membros, Cotas, Listas, Saídas, Fim de Ano, Relatórios, Utilizadores, Auditoria, Backups, Perfil e Configurações — até à Fase 6 e à aprovação dos testes correspondentes. As rotas devolvem 503 antes de consultar dados do módulo enquanto o gate está desligado; a ponte procedural continua fail-closed e não é fallback.
+
+Antes de activar qualquer gate, obtém `SHOW CREATE TABLE` real, aprova/aplica a migração tenant necessária e passa testes de isolamento/IDOR, CSRF e consistência em staging. A Fase 5 não executou migrations nem alterou dados reais; não fazer essas operações com base em DDL inferido do código legado. O histórico financeiro de membros e a ferramenta de recálculo de referências antigas continuam deliberadamente bloqueados até haver fluxo de revisão e reversão seguro. Ver também `docs/fase-05-membros.md`.

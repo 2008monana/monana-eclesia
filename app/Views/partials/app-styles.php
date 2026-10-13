@@ -140,6 +140,13 @@ body.area-superadmin .content { max-width: 1600px; }
 .admin-form .hint { margin-top: 5px; color: var(--brown-500); font-size: 11.5px; line-height: 1.5; }
 .admin-form .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .admin-form .form-grid .field-group { margin-bottom: 2px; }
+.permission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 9px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf9; }
+.permission-option { display: flex !important; align-items: center; gap: 9px; margin: 0 !important; padding: 8px; border-radius: 7px; background: #fff; cursor: pointer; }
+.permission-option input { width: 16px !important; min-height: 16px !important; margin: 0; accent-color: var(--gold-600); }
+.field-error { margin-top: 5px; color: #a43122; font-size: 11.5px; }
+.profile-avatar { display: flex; align-items: center; justify-content: center; width: 62px; height: 62px; flex: 0 0 62px; border-radius: 50%; background: var(--grad-gold); color: #fff; font: 700 25px var(--font-ui); }
+.profile-meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--brown-500); font-size: 12px; }
+.profile-meta strong { color: var(--brown-800); }
 .status-pill {
     display: inline-block;
     padding: 4px 8px;

@@ -125,7 +125,7 @@ final class ProvisionamentoIgrejaService
             ]);
             $this->permissions->createDefaults($pdo, $userId, $churchId, [
                 'dashboard', 'members', 'registry', 'lists', 'year_end', 'expenses', 'reports',
-                'users', 'audit', 'backups', 'profile',
+                'users', 'audit', 'backups', 'profile', 'settings',
             ]);
             $this->tokens->createActivationToken(
                 $pdo,
