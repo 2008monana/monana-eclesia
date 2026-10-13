@@ -30,8 +30,7 @@ $appConfiguration = require BASE_PATH . '/config/app.php';
 $databaseConfiguration = require BASE_PATH . '/config/database.php';
 \App\Core\Database::configure($databaseConfiguration);
 
-// Lê também a configuração de email nesta fase; o transporte e a fila entram
-// na Fase 3. Nenhum email é enviado por este bootstrap.
+// MailService lê a configuração de email, mas o bootstrap não envia mensagens.
 $mailConfiguration = require BASE_PATH . '/config/mail.php';
 \App\Core\Config::set('mail', $mailConfiguration);
 unset($mailConfiguration);

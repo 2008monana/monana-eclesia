@@ -8,6 +8,7 @@ if (!defined('BASE_PATH')) {
 }
 
 require_once BASE_PATH . '/config/bootstrap.php';
+\App\Core\Session::start();
 
 $appConfiguration = \App\Core\Config::get('app', []);
 $request = \App\Core\Request::fromGlobals($appConfiguration);

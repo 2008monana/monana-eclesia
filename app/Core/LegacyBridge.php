@@ -49,54 +49,20 @@ final class LegacyBridge
             return Response::html((new View())->render('errors/404'), 404);
         }
 
-        // Os scripts antigos esperam $_GET['id']; um parâmetro explícito na rota
-        // tem prioridade sobre o mesmo parâmetro enviado na query string.
-        if (isset($parameters['id'])) {
-            $id = (string) $parameters['id'];
-            if (!ctype_digit($id) || (int) $id < 1) {
-                return Response::html((new View())->render('errors/404'), 404);
-            }
-            $_GET['id'] = $id;
-            $_REQUEST['id'] = $id;
+        // As páginas antigas ainda não filtram `igreja_id`. O fallback é
+        // fail-closed: apenas uma rota MVC migrada poderá reactivar cada módulo.
+        \App\Core\Session::start();
+        if ((int) \App\Core\Session::get('auth_user_id', 0) < 1) {
+            return Response::redirect(url('login'));
         }
+        $authenticatedUser = \App\Core\Session::get('_auth_user', []);
+        if (!is_array($authenticatedUser)) {
+            return Response::redirect(url('login'));
+        }
+        if (($authenticatedUser['papel'] ?? '') === 'superadmin') {
+            return Response::redirect(url('superadmin'));
+        }
+        return Response::html((new View())->render('errors/modulo-pendente'), 503);
 
-        $previousDirectory = getcwd();
-        $hadLegacyRoute = array_key_exists('__rota_atual_legada', $GLOBALS);
-        $previousLegacyRoute = $hadLegacyRoute ? $GLOBALS['__rota_atual_legada'] : null;
-        $legacyRoute = substr($relativeFile, 0, -4);
-        if (substr($legacyRoute, -6) === '/index') {
-            $legacyRoute = substr($legacyRoute, 0, -6);
-        }
-        $moduleDirectory = dirname($file);
-        if (!chdir($moduleDirectory)) {
-            throw new \RuntimeException('Não foi possível preparar a página legada.');
-        }
-        $GLOBALS['__rota_atual_legada'] = $legacyRoute;
-
-        ob_start();
-        try {
-            include $file;
-            $body = (string) ob_get_clean();
-        } catch (\Throwable $exception) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
-            throw $exception;
-        } finally {
-            if ($hadLegacyRoute) {
-                $GLOBALS['__rota_atual_legada'] = $previousLegacyRoute;
-            } else {
-                unset($GLOBALS['__rota_atual_legada']);
-            }
-            if (is_string($previousDirectory) && $previousDirectory !== '') {
-                chdir($previousDirectory);
-            }
-        }
-
-        $status = http_response_code();
-        if (!is_int($status) || $status < 100 || $status > 599) {
-            $status = 200;
-        }
-        return Response::legacy($body, $status);
     }
 }

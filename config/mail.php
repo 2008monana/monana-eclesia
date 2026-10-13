@@ -5,7 +5,7 @@ if (!defined('MONANA')) {
 }
 
 return [
-    // O envio efectivo e a fila serão ligados na Fase 3.
+    // MailService escolhe PHPMailer ou LogMailer e regista falhas na fila.
     'mailer' => (string) \App\Core\Config::env('MAIL_MAILER', 'log'),
     'from_address' => (string) \App\Core\Config::env('MAIL_FROM_ADDRESS', 'nao-responder@example.invalid'),
     'from_name' => (string) \App\Core\Config::env('MAIL_FROM_NAME', 'MonanaEclésia'),

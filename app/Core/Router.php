@@ -70,6 +70,10 @@ final class Router
 
             $pathMatched = true;
             if (in_array('*', $route['methods'], true)) {
+                $csrfResponse = (new \App\Middleware\CsrfMiddleware())->handle($this->request);
+                if ($csrfResponse instanceof Response) {
+                    return $csrfResponse;
+                }
                 return $this->runHandler($route['handler'], $parameters);
             }
 
@@ -78,6 +82,10 @@ final class Router
             }
 
             if (in_array($methodToMatch, $route['methods'], true)) {
+                $csrfResponse = (new \App\Middleware\CsrfMiddleware())->handle($this->request);
+                if ($csrfResponse instanceof Response) {
+                    return $csrfResponse;
+                }
                 return $this->runHandler($route['handler'], $parameters);
             }
         }

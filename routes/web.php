@@ -10,6 +10,42 @@ if (!defined('MONANA')) {
  * fazem 301 em GET/HEAD e mantêm POST apenas para compatibilidade transitória.
  */
 return static function (\App\Core\Router $router): void {
+    // Rotas novas de autenticação, setup inicial e Superadmin.
+    $router->get('/instalacao/superadmin', [\App\Controllers\Auth\SetupSuperadminController::class, 'form']);
+    $router->post('/instalacao/superadmin', [\App\Controllers\Auth\SetupSuperadminController::class, 'create']);
+
+    $router->get('/login', [\App\Controllers\Auth\LoginController::class, 'index']);
+    $router->post('/login', [\App\Controllers\Auth\LoginController::class, 'authenticate']);
+    $router->post('/sair', [\App\Controllers\Auth\LoginController::class, 'logout']);
+    $router->post('/logout', [\App\Controllers\Auth\LoginController::class, 'logout']);
+    $router->post('/forgot-password', [\App\Controllers\Auth\SenhaController::class, 'requestReset']);
+    $router->post('/reset-password', [\App\Controllers\Auth\SenhaController::class, 'submitReset']);
+    $router->get('/recuperar-senha', [\App\Controllers\Auth\SenhaController::class, 'forgotForm']);
+    $router->post('/recuperar-senha', [\App\Controllers\Auth\SenhaController::class, 'requestReset']);
+    $router->get('/resetar-senha', [\App\Controllers\Auth\SenhaController::class, 'resetForm']);
+    $router->post('/resetar-senha', [\App\Controllers\Auth\SenhaController::class, 'submitReset']);
+    $router->get('/activar-conta', [\App\Controllers\Auth\AtivacaoController::class, 'form']);
+    $router->post('/activar-conta', [\App\Controllers\Auth\AtivacaoController::class, 'activate']);
+    $router->get('/trocar-senha', [\App\Controllers\Auth\SenhaController::class, 'changeForm']);
+    $router->post('/trocar-senha', [\App\Controllers\Auth\SenhaController::class, 'change']);
+    $router->post('/sessoes/terminar-todas', [\App\Controllers\Auth\SenhaController::class, 'terminateAll']);
+
+    $router->get('/painel', [\App\Controllers\Igreja\DashboardController::class, 'index']);
+    $router->get('/superadmin', [\App\Controllers\Superadmin\DashboardController::class, 'index']);
+    $router->get('/superadmin/igrejas', [\App\Controllers\Superadmin\IgrejaController::class, 'index']);
+    $router->get('/superadmin/igrejas/nova', [\App\Controllers\Superadmin\IgrejaController::class, 'createForm']);
+    $router->post('/superadmin/igrejas', [\App\Controllers\Superadmin\IgrejaController::class, 'create']);
+    $router->get('/superadmin/igrejas/{id}/editar', [\App\Controllers\Superadmin\IgrejaController::class, 'editForm']);
+    $router->post('/superadmin/igrejas/{id}/editar', [\App\Controllers\Superadmin\IgrejaController::class, 'update']);
+    $router->post('/superadmin/igrejas/{id}/estado', [\App\Controllers\Superadmin\IgrejaController::class, 'setStatus']);
+    $router->post('/superadmin/emails/{id}/reenviar', [\App\Controllers\Superadmin\IgrejaController::class, 'resendEmail']);
+
+    $router->get('/superadmin/planos', [\App\Controllers\Superadmin\PlanoController::class, 'index']);
+    $router->get('/superadmin/planos/novo', [\App\Controllers\Superadmin\PlanoController::class, 'createForm']);
+    $router->post('/superadmin/planos', [\App\Controllers\Superadmin\PlanoController::class, 'create']);
+    $router->get('/superadmin/planos/{id}/editar', [\App\Controllers\Superadmin\PlanoController::class, 'editForm']);
+    $router->post('/superadmin/planos/{id}/editar', [\App\Controllers\Superadmin\PlanoController::class, 'update']);
+    $router->post('/superadmin/planos/{id}/apagar', [\App\Controllers\Superadmin\PlanoController::class, 'delete']);
     $router->get('/', static function (): \App\Core\Response {
         return \App\Core\Response::redirect(url('login'));
     });
@@ -38,11 +74,6 @@ return static function (\App\Core\Router $router): void {
     // Rotas canónicas em português; cada uma substitui a respectiva página antiga
     // quando o módulo for migrado nas fases seguintes.
     $portugueseRoutes = [
-        '/login' => 'auth/login.php',
-        '/sair' => 'auth/logout.php',
-        '/recuperar-senha' => 'auth/forgot-password.php',
-        '/resetar-senha' => 'auth/reset-password.php',
-        '/painel' => 'dashboard/index.php',
 
         '/membros' => 'members/index.php',
         '/membros/novo' => 'members/add.php',

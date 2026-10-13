@@ -25,7 +25,7 @@ RewriteCond %{REQUEST_METHOD} !^(GET|HEAD)$
 RewriteRule ^modules/[a-z-]+(?:/[a-z0-9-]+)?(?:\.php)?/?$ index.php [QSA,L,NC]
 
 # Nenhuma pasta de aplicação ou dado interno pode ser pedido directamente.
-RewriteRule ^(\.git|\.venv|app|config|database|routes|storage|vendor|docs|controllers|models|views|modules|includes|core|_build|_legado)(/|$) - [F,L,NC]
+RewriteRule ^(\.git|\.venv|app|config|database|routes|storage|vendor|docs|tests|controllers|models|views|modules|includes|core|_build|_legado)(/|$) - [F,L,NC]
 
 # Ocultar .php nas restantes páginas antigas; manter acessível só o front
 # controller público e a pequena entrada index.php da raiz.

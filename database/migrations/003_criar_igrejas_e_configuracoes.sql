@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `igrejas` (
     `estado` ENUM('pendente','activa','suspensa') NOT NULL DEFAULT 'pendente',
     `criada_em` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `suspensa_em` DATETIME NULL,
+    `encerrada_em` DATETIME NULL,
     `motivo_suspensao` VARCHAR(500) NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_igrejas_slug` (`slug`),

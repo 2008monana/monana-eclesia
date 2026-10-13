@@ -71,7 +71,7 @@ final class Validator
                 $argument = isset($parts[1]) ? trim($parts[1]) : '';
                 $message = $this->failureMessage($rule, $argument);
 
-                if (!$this->passes($rule, $argument, $value, $numericMode)) {
+                if (!$this->ruleAllows($rule, $argument, $value, $numericMode)) {
                     $this->addError($field, $message);
                     break;
                 }
@@ -113,7 +113,7 @@ final class Validator
         return $this->errors === [];
     }
 
-    private function passes(string $rule, string $argument, $value, bool $numericMode): bool
+    private function ruleAllows(string $rule, string $argument, $value, bool $numericMode): bool
     {
         switch ($rule) {
             case 'string':

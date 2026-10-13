@@ -64,6 +64,9 @@ final class Database
 
         try {
             self::$connection = new PDO($dsn, $username, $password, $options);
+            // Armazenar timestamps da aplicação em UTC evita diferenças entre
+            // o timezone do alojamento e o de Luanda na validade dos tokens.
+            self::$connection->exec("SET time_zone = '+00:00'");
         } catch (PDOException $exception) {
             // A excepção original segue apenas para o log; não revelar DSN nem credenciais.
             throw new \RuntimeException('Não foi possível estabelecer ligação à base de dados.', 0, $exception);
