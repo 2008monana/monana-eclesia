@@ -1,7 +1,7 @@
 # Fase 3 — Autenticação, provisionamento e Superadmin
 
 **Estado:** implementação concluída para revisão; **não validada em runtime nem numa base MySQL** neste ambiente.
-**Âmbito:** acesso SaaS, criação e administração de igrejas/planos, email de activação/redefinição e segurança da sessão. A Fase 4/5/6 não foi iniciada.
+**Âmbito:** acesso SaaS, criação e administração de igrejas/planos, email de activação/redefinição e segurança da sessão. A Fase 4 foi implementada depois e está descrita em `docs/fase-04-layouts-identidade.md`; as Fases 5/6 continuam por iniciar.
 
 ## Implementado
 
@@ -60,4 +60,4 @@ Dependências Composer permitidas nesta etapa: PHPMailer e Dompdf já existente.
 - Dados SMTP oficiais da conta, incluindo host, porta, TLS/SSL, remetente verificado e credenciais introduzidas directamente no `.env`/painel do alojamento. Não partilhar a senha SMTP em chat.
 - Domínio/caminho final e confirmação de suporte do alojamento para PHP 7.4+, PDO MySQL, OpenSSL e conexões SMTP de saída.
 
-**Próxima fase:** Fase 4, sem migrar módulos de negócio até cumprir a sequência definida. A actual Fase 3 termina neste ponto.
+**Limite da Fase 3:** não migra módulos de negócio nem dados reais. A Fase 4 foi concluída separadamente; a próxima etapa é a Fase 5, sem avançar para a migração de dados da Fase 6.

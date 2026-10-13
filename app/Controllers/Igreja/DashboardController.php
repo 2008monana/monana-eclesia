@@ -31,10 +31,24 @@ final class DashboardController extends Controller
             return Response::text('Não foi possível determinar a igreja autenticada.', 403);
         }
         $view = new View();
-        return Response::html($view->render('igreja/dashboard', [
-            'user' => is_array($user) ? $user : [],
-            'tenantId' => $tenantId,
-            'csrf' => \App\Middleware\CsrfMiddleware::token(),
-        ]));
+        $authenticatedUser = is_array($user) ? $user : [];
+        $churchName = trim((string) ($authenticatedUser['igreja_nome'] ?? ''));
+        if ($churchName === '') {
+            $churchName = 'A tua igreja';
+        }
+        $content = $view->render('igreja/dashboard', [
+            'churchName' => $churchName,
+        ]);
+        $html = $view->render('layouts/app', [
+            'content' => $content,
+            'title' => 'Painel da igreja',
+            'area' => 'igreja',
+            'active' => 'painel',
+            'actorName' => (string) ($authenticatedUser['nome_completo'] ?? 'Utilizador'),
+            'actorRole' => (string) ($authenticatedUser['papel'] ?? ''),
+            'tenantName' => $churchName,
+            'footerText' => 'MonanaEclésia · ' . $churchName . ' · Protecção de dados pessoais — Lei n.º 22/11 de Angola',
+        ]);
+        return Response::html($html);
     }
 }

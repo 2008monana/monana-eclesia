@@ -48,5 +48,6 @@ php -l index.php
 ## Fica para as próximas fases
 
 - Fase 3 foi implementada; ver `docs/fase-03-autenticacao-superadmin.md` para o que está e não está verificado.
-- Fase 4/5: avançar apenas depois da revisão desta fase; migrar layouts/módulos progressivamente e remover a ponte por módulo após validação equivalente.
+- Fase 4: partilhar o shell de apresentação MVC, preparar os layouts de email/PDF e conservar desactivadas as rotas ainda sem isolamento.
+- Fase 5: migrar os módulos progressivamente e remover a ponte por módulo só após validação equivalente; não abrir módulos legados antes disso.
 - Fase 6: importar os dados reais, atribuir tenants e aplicar `igreja_id` com FKs apenas depois do `SHOW CREATE TABLE` de produção e aprovação do mapeamento.

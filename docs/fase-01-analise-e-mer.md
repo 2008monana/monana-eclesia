@@ -338,8 +338,8 @@ Estas regras são o que os testes de regressão da Fase 7 vão validar.
 | Logótipo | `assets/img/logo.png`, `logo-mark.png`, favicons | |
 | Classes estruturais | `app`, `sidebar`, `sb-brand`, `sb-nav`, `sb-label`, `sb-item`, `sub`, `main`, `topbar`, `content`, `page-head`, `stat-card`, `metric-card`, `panel`, `btn-primary`, `grid-stats`, `footer-note`, `modal-overlay`, `modal-box` | usadas nas vistas extraídas |
 | Login | `.auth`, `.auth-brand`, `.auth-panel`, `.auth-card`, `.logo`, `.mark-sm`, `.tagline`, `.legal`, `.field`, `.toggle-eye`, `.check` | layout dividido |
-| PDFs | `includes/pdf-theme.php`: `pdfLogoDataUri()`, `pdfCabecalho()`, `pdfBrandCss()` | cabeçalho hoje fixo → passa a vir da igreja |
-| Emails | *(não existem)* | criar `Views/emails/*` na mesma linguagem visual |
+| PDFs | `includes/pdf-theme.php` (legado) e `app/Views/pdf/layout.php` (MVC) | o novo layout recebe a identidade da igreja; ligar os geradores só ao migrar cada módulo na Fase 5 |
+| Emails | `app/Views/emails/*` | frame HTML reutilizável, texto em pt-AO e escaping dos dados dinâmicos |
 
 ### 7.2 Textos a parametrizar por igreja
 
@@ -509,7 +509,7 @@ Os testes de RN01–RN04 (`CotaService`) serão escritos com um duplo de reposit
 |---|---|---|
 | **2. Núcleo MVC** | `app/Core` (Autoload PSR‑4, Router, Request, Response, Controller, View, Database, Session, Validator, Config), `.env.example`, `config/*.php`, `routes/web.php`, front controller, `database/migrations/001…003`, `Response` com cabeçalhos de segurança | Sintaxe + `php -l` teu; smoke test da rota `/login` |
 | **3. Auth + Superadmin** | `AuthService`, `MailerInterface` (`SmtpMailer`, `LogMailer`), fila `email_fila`, `ProvisionamentoIgrejaService`, painel Superadmin, planos, CSRF, rate limit, auditoria | Testes de auth, provisionamento e reset; fila visível e reenvio |
-| **4. Layouts + identidade** | `Views/layouts/{app,auth,superadmin}.php`, parciais, `Views/pdf`, `Views/emails` | Comparação HTML lado a lado com a versão actual |
+| **4. Layouts + identidade** | `Views/layouts/{app,auth,superadmin}.php`, parciais partilhadas, `Views/pdf`, `Views/emails` | Smoke test autónomo das vistas e comparação visual quando houver runtime web disponível |
 | **5. Migração módulo a módulo** | Membros → Cotas → Listas → Saídas → Fim de Ano → Relatórios/PDF → Utilizadores → Auditoria → Backups → Perfil → Dashboard → Configurações, cada um com `CotaService`/repositórios filtrados | Auditoria estática + testes de regressão por módulo |
 | **6. Migração de dados** | Script idempotente: cria igreja 1 (I.P.F.V.A Calemba 2), `igreja_id = 1` nos registos, converte MyISAM→InnoDB, cria superadmin, migra `perfil`→`papel` | Execução dupla (prova de idempotência) + reversão documentada |
 | **7. Testes e segurança** | Isolamento entre igrejas (ID directo, listas, relatórios, PDF, Excel, backup), regressões RN01–RN14, revisão OWASP | Relatório de resultados |
