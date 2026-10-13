@@ -1,17 +1,21 @@
 <?php
-// config/session.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+if (!defined('MONANA')) {
+    http_response_code(403);
+    exit;
 }
 
+// A sessão é preparada pelo bootstrap com HttpOnly, Secure e SameSite=Lax.
+// Páginas legadas que ainda chamam session_start() reutilizam esta configuração.
+\App\Core\Session::start();
+
+if (!function_exists('isLoggedIn')) {
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
 
 function checkLogin() {
     if (!isLoggedIn()) {
-        header('Location: /ipfva-gestao/modules/auth/login.php');
-        exit;
+        redirect('login');
     }
 }
 
@@ -72,8 +76,7 @@ function podeAcessarModulo($modulo) {
 function requireModuleAccess($modulo) {
     checkLogin();
     if (!podeAcessarModulo($modulo)) {
-        header('Location: /ipfva-gestao/modules/profile/index.php?sem_acesso=1');
-        exit;
+        redirect('modules/profile/index.php?sem_acesso=1');
     }
 }
 
@@ -87,7 +90,7 @@ function getUrlPosLogin() {
     if (podeAcessarModulo('dashboard')) {
         return 'dashboard';
     }
-    return 'modules/profile/index.php';
+    return 'profile';
 }
 
 function hasPermission($modulo, $acao) {
@@ -95,4 +98,4 @@ function hasPermission($modulo, $acao) {
     // utilizador tenha acesso é permitida; sem acesso ao módulo, nada é.
     return podeAcessarModulo($modulo);
 }
-?>
+}

@@ -23,7 +23,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /ipfva-gestao/modules/auth/login.php');
+    redirect('login');
     exit;
 }
 
@@ -31,7 +31,7 @@ require_once '../../config/session.php';
 requireModuleAccess('registry');
 
 if (($_SESSION['user_perfil'] ?? '') !== 'admin') {
-    header('Location: ' . '/ipfva-gestao/modules/profile/index.php?sem_acesso=1');
+    redirect('profile?sem_acesso=1');
     exit;
 }
 
