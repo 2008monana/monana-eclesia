@@ -3,12 +3,12 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /ipfva-gestao/modules/auth/login.php');
+    redirect('login');
     exit;
 }
 
 if ($_SESSION['user_perfil'] != 'admin') {
-    header('Location: /ipfva-gestao/modules/dashboard/index.php');
+    redirect('dashboard');
     exit;
 }
 

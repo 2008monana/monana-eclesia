@@ -5,7 +5,7 @@ require_once '../../config/url.php';
 require_once '../../config/session.php';
 
 if (isset($_SESSION['user_id'])) {
-    header('Location: /ipfva-gestao/' . getUrlPosLogin());
+    redirect(getUrlPosLogin());
     exit;
 }
 
@@ -276,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Redirecionar após 1.5 segundos
                     setTimeout(() => {
-                        window.location.href = data.redirect || '/ipfva-gestao/modules/dashboard/index.php';
+                        window.location.href = data.redirect || '<?= url('dashboard') ?>';
                     }, 1500);
                     
                 } else {

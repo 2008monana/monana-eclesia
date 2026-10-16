@@ -1,0 +1,3 @@
+# Os ficheiros de runtime nunca são servidos por HTTP.
+Order Allow,Deny
+Deny from all

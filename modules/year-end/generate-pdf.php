@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/pdf-theme.php';
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /ipfva-gestao/modules/auth/login.php');
+    redirect('login');
     exit;
 }
 
