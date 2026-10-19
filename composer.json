@@ -1,5 +1,29 @@
 {
+    "name": "monana/eclesia",
+    "description": "Monana Eclesia — SaaS Multi-Igreja",
+    "type": "project",
+    "license": "proprietary",
     "require": {
-        "dompdf/dompdf": "^3.1"
-    }
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "vlucas/phpdotenv": "^5.6",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/Helpers/helpers.php",
+            "app/Helpers/constants.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

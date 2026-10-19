@@ -1,0 +1,351 @@
+/* =============================================================
+   Layout exclusivo do Painel Superadmin
+   ============================================================= */
+
+.sa-body {
+    margin: 0;
+    background: var(--ivory-bg);
+    font-family: var(--font-sans);
+    color: var(--text);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.sa-app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 60px 1fr;
+    min-height: 100vh;
+}
+
+/* ---------------- TOPBAR ---------------- */
+.sa-topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    background: #2e1b0e;           /* castanho escuro, distinto do layout igreja */
+    border-bottom: 2px solid var(--gold-500);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.sa-topbar .sa-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 190px;
+}
+
+.sa-topbar .sa-brand svg {
+    filter: brightness(1.2);
+}
+
+.sa-topbar .sa-brand-text {
+    line-height: 1;
+}
+
+.sa-topbar .sa-brand-title {
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: .04em;
+    color: #f6ecd2;
+}
+
+.sa-topbar .sa-brand-title span { color: var(--gold-400); }
+
+.sa-topbar .sa-badge {
+    display: inline-block;
+    font-size: 8.5px;
+    letter-spacing: .18em;
+    background: var(--gold-500);
+    color: #2e1b0e;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.sa-topbar .sa-brand-sub {
+    font-size: 7px;
+    letter-spacing: .18em;
+    color: #c9a058;
+    margin-top: 4px;
+}
+
+.sa-topbar .sa-search {
+    flex: 1;
+    max-width: 340px;
+    position: relative;
+}
+.sa-topbar .sa-search i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a3937a;
+    font-size: 12px;
+}
+.sa-topbar .sa-search input {
+    width: 100%;
+    height: 34px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 8px;
+    padding: 0 12px 0 34px;
+    color: #f6ecd2;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border .15s, background .15s;
+}
+.sa-topbar .sa-search input::placeholder { color: #a3937a; }
+.sa-topbar .sa-search input:focus {
+    border-color: var(--gold-500);
+    background: rgba(255,255,255,.12);
+}
+
+.sa-topbar .sa-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sa-topbar .sa-icon-btn {
+    background: none;
+    border: 0;
+    color: #f6ecd2;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 15px;
+    position: relative;
+    transition: background .15s;
+}
+.sa-topbar .sa-icon-btn:hover { background: rgba(255,255,255,.08); }
+.sa-topbar .sa-icon-btn .dot {
+    position: absolute;
+    top: 8px; right: 9px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold-400);
+    border: 1.5px solid #2e1b0e;
+}
+
+.sa-topbar .sa-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.06);
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+}
+.sa-topbar .sa-user:hover { background: rgba(255,255,255,.1); }
+
+.sa-topbar .sa-user .avatar {
+    width: 30px; height: 30px;
+    background: var(--gold-500);
+    color: #2e1b0e;
+    font-weight: 700;
+    font-size: 11px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+
+.sa-topbar .sa-user .txt { line-height: 1.2; }
+.sa-topbar .sa-user .name { font-size: 12.5px; font-weight: 600; color: #f6ecd2; }
+.sa-topbar .sa-user .role { font-size: 10.5px; color: #c9a058; text-transform: capitalize; }
+.sa-topbar .sa-user .chev { color: #c9a058; font-size: 11px; margin-left: 2px; }
+
+.sa-user-menu {
+    position: absolute;
+    right: 0;
+    top: 46px;
+    background: #fffdf8;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 6px;
+    width: 220px;
+    z-index: 60;
+    box-shadow: 0 8px 24px rgba(46,27,14,.15);
+    display: none;
+}
+.sa-user-menu.show { display: block; }
+
+.sa-user-menu .sa-menu-head {
+    padding: 8px 12px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 4px;
+}
+.sa-user-menu .sa-menu-head .label {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.sa-user-menu .sa-menu-head .email {
+    font-size: 12.5px;
+    color: var(--brown-900);
+    font-weight: 600;
+    margin-top: 3px;
+}
+.sa-user-menu .sa-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--brown-800);
+    text-decoration: none;
+    background: none;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+.sa-user-menu .sa-menu-item:hover { background: var(--gold-50); }
+.sa-user-menu .sa-menu-item i { width: 16px; color: var(--gold-600); }
+
+/* ---------------- SIDEBAR ---------------- */
+.sa-sidebar {
+    background: #fbf6ea;
+    border-right: 1px solid var(--line);
+    padding: 16px 10px 24px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.sa-sidebar-header {
+    padding: 6px 12px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 12px;
+}
+.sa-sidebar-header .label {
+    font-size: 9.5px;
+    letter-spacing: .2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.sa-sidebar-header .title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--brown-900);
+    margin-top: 4px;
+    letter-spacing: .02em;
+}
+
+.sa-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sa-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--brown-800);
+    text-decoration: none;
+    transition: background .15s;
+    border-left: 2px solid transparent;
+}
+.sa-nav-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--brown-700);
+}
+.sa-nav-item:hover { background: var(--gold-50); }
+.sa-nav-item.active {
+    background: linear-gradient(90deg, var(--gold-100), var(--gold-50));
+    color: var(--gold-900);
+    font-weight: 600;
+    border-left-color: var(--gold-500);
+}
+.sa-nav-item.active i { color: var(--gold-700); }
+
+.sa-verse {
+    margin-top: auto;
+    padding: 20px 12px 0;
+    text-align: center;
+    color: var(--brown-700);
+    border-top: 1px solid var(--line-soft);
+    margin-top: 24px;
+}
+.sa-verse .cross {
+    color: var(--gold-500);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+.sa-verse p {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* ---------------- MAIN ---------------- */
+.sa-main {
+    padding: 24px 28px 36px;
+    min-width: 0;
+}
+
+/* ---------------- OVERLAY (mobile) ---------------- */
+.sa-overlay {
+    display: none;
+}
+.sa-menu-toggle {
+    display: none;
+}
+
+/* ---------------- RESPONSIVO ---------------- */
+@media (max-width: 960px) {
+    .sa-app { grid-template-columns: 1fr; }
+    .sa-menu-toggle { display: grid; }
+    .sa-topbar .sa-search { display: none; }
+    .sa-topbar .sa-brand { min-width: auto; }
+    .sa-topbar .sa-user .txt { display: none; }
+    .sa-sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px;
+        bottom: 0;
+        width: 220px;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        box-shadow: 4px 0 20px rgba(46,27,14,.15);
+    }
+    .sa-sidebar.open { transform: translateX(0); }
+    .sa-overlay.show {
+        display: block;
+        position: fixed;
+        inset: 60px 0 0 0;
+        background: rgba(46,27,14,.45);
+        z-index: 35;
+    }
+    .sa-main { padding: 18px 16px 28px; }
+}

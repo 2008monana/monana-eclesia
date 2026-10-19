@@ -1,0 +1,25 @@
+# ============================================================
+# Monana Eclesia — Apache Rewrite (docroot = public/)
+# ============================================================
+Options -Indexes -MultiViews
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+RewriteEngine On
+
+# Bloqueia acesso a ficheiros sensíveis (defesa em profundidade)
+<FilesMatch "^(\.env|composer\.(json|lock)|.*\.sql|.*\.md)$">
+    Require all denied
+</FilesMatch>
+
+# Se o ficheiro/diretório existir fisicamente, serve-o
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Caso contrário, delega ao Front Controller
+RewriteRule ^ index.php [QSA,L]

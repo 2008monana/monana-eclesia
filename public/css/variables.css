@@ -1,0 +1,37 @@
+:root {
+    --gold-900: #7a5414;
+    --gold-700: #9c6d1c;
+    --gold-600: #b8862b;
+    --gold-500: #c9962f;
+    --gold-400: #d9ab45;
+    --gold-300: #e6c574;
+    --gold-200: #efdcab;
+    --gold-100: #f6ecd2;
+    --gold-50:  #fbf5e6;
+
+    --brown-900: #2e1b0e;
+    --brown-800: #3a2412;
+    --brown-700: #5a3a1c;
+
+    --ivory-bg:      #f8f3e7;
+    --ivory-surface: #fffdf8;
+    --line:      #ece2cc;
+    --line-soft: #f2ead8;
+
+    --text:       #2f2418;
+    --text-muted: #7c6d58;
+    --text-soft:  #a3937a;
+
+    --success:    #3f8f4a;
+    --success-bg: #e3f1e1;
+    --danger:     #b5462f;
+    --danger-bg:  #f3e6e1;
+
+    --font-serif:   "Cormorant Garamond", Georgia, serif;
+    --font-display: "Cinzel", Georgia, serif;
+    --font-sans:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --radius: 10px;
+    --shadow-card: 0 1px 2px rgba(80,55,20,.04), 0 4px 14px rgba(120,85,30,.05);
+    --shadow-btn:  0 4px 12px rgba(184,134,43,.28);
+}

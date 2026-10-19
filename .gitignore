@@ -1,45 +1,65 @@
-# Arquivos do sistema
+# ============================================================
+# Monana Eclesia — Git Ignore
+# ============================================================
+
+# Dependências (Composer)
+/vendor/
+
+# Ambiente
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Cache
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# Sessões
+/storage/sessions/*
+!/storage/sessions/.gitkeep
+
+# Backups de base de dados
+/storage/backups/*
+!/storage/backups/.gitkeep
+
+# Uploads (ficheiros enviados por utilizadores)
+/public/uploads/**/*
+!/public/uploads/.gitkeep
+!/public/uploads/logos/.gitkeep
+!/public/uploads/membros/.gitkeep
+!/public/uploads/comprovativos/.gitkeep
+
+# Ficheiros temporários
+*.tmp
+*.temp
+*.swp
+*~
+
+# IDE / Editor
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Sistema operativo
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Arquivos de log
-logs/*.log
-logs/*.txt
-*.log
+# Composer lock (opcional — descomente se quiser ignorar)
+# composer.lock
 
-# Dependências
-vendor/
+# Node (se um dia houver)
 node_modules/
-composer.lock
+npm-debug.log
+yarn-error.log
 
-# Arquivos de configuração local
-config/database.php
-.env
-.env.local
-.env.production
-
-# Arquivos de IDE
-.vscode/
-.idea/
-*.sublime-*
-
-# Arquivos temporários do PHP
-*.tmp
-*.cache
-
-# Uploads (se tiver)
-public/uploads/
-public/assets/img/uploads/
-
-# Backup do banco de dados
-*.sql
-*.backup
-
-# Arquivos de sessão
-sess_*
-
-# Certificados
-*.pem
-*.crt
-*.key"vendor/" 
+# Builds
+/dist/
+/build/
